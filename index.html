@@ -366,7 +366,7 @@ body.portal .gbus{display:none}
   </nav>
 
   <main id="view"><div class="loading">Cargando información…</div></main>
-  <footer class="sg-pie"><a href="https://skynetgenesis.com" target="_blank" rel="noopener"><svg class="sg-ico" width="18" height="18" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect x="4" y="4" width="192" height="192" rx="46" fill="#1E3A4C"/><g stroke="#FFFFFF" stroke-linecap="round"><polygon points="100,42 150.2,71 150.2,129 100,158 49.8,129 49.8,71" fill="none" stroke-opacity=".35" stroke-width="4"/><path d="M100 100L100 42M100 100L150.2 71M100 100L150.2 129M100 100L100 158M100 100L49.8 129M100 100L49.8 71" stroke-width="6"/></g><g fill="#FFFFFF"><circle cx="150.2" cy="71" r="10"/><circle cx="150.2" cy="129" r="10"/><circle cx="100" cy="158" r="10"/><circle cx="49.8" cy="129" r="10"/><circle cx="49.8" cy="71" r="10"/></g><circle cx="100" cy="42" r="13" fill="#E0A21A"/><circle cx="100" cy="100" r="20" fill="#E0A21A"/></svg><span>AcademIA ETDH · una aplicación de <b>SkyNet Genesis</b></span></a></footer>
+  <footer class="sg-pie"><a href="https://skynetgenesis.com" target="_blank" rel="noopener"><svg class="sg-ico" width="18" height="18" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect x="4" y="4" width="192" height="192" rx="46" fill="#1E3A4C"/><g stroke="#FFFFFF" stroke-linecap="round"><polygon points="100,42 150.2,71 150.2,129 100,158 49.8,129 49.8,71" fill="none" stroke-opacity=".35" stroke-width="4"/><path d="M100 100L100 42M100 100L150.2 71M100 100L150.2 129M100 100L100 158M100 100L49.8 129M100 100L49.8 71" stroke-width="6"/></g><g fill="#FFFFFF"><circle cx="150.2" cy="71" r="10"/><circle cx="150.2" cy="129" r="10"/><circle cx="100" cy="158" r="10"/><circle cx="49.8" cy="129" r="10"/><circle cx="49.8" cy="71" r="10"/></g><circle cx="100" cy="42" r="13" fill="#E0A21A"/><circle cx="100" cy="100" r="20" fill="#E0A21A"/></svg><span>AcademIA ETDH · una aplicación de <b>SkyNet Genesis</b></span></a><span>· <a href="mailto:contacto@skynetgenesis.com">contacto@skynetgenesis.com</a> · <a href="https://wa.me/573044375758" target="_blank" rel="noopener">WhatsApp 304 437 5758</a></span></footer>
 </div>
 
 <dialog id="dlg"></dialog>
@@ -1448,7 +1448,7 @@ function sietExcel(per){
   const ests = Object.values(S.est).filter(e => e.cohorte && semMeses(per).some(m => m >= (e.inicio||'0000') && (!e.fin || m <= e.fin)) && semDiff(e.cohorte, per) >= 0 && semDiff(e.cohorte, per) < semestresProg(e));
   const rows = [['Tipo de identificación','Número de identificación','Apellidos','Nombres','Género','Fecha de nacimiento','Estado civil','Lugar de nacimiento','Municipio de residencia','Dirección','Teléfono','Correo','Estrato','Régimen de salud / EPS','Nivel de formación','Ocupación','Discapacidad','Multiculturalidad / población','Programa','Registro del programa','Jornada','Semestre','Fecha de ingreso','Estado']];
   ests.forEach(e => rows.push([TIPOS_DOC[e.tipoDoc] || '', e.documento||'', e.apellidos||'', e.nombres || (e.apellidos ? '' : e.nombre), e.genero||'', e.fechaNacimiento||'', e.estadoCivil||'', e.lugarNacimiento||'', e.municipio||'', e.direccion||'', e.telefono||'', e.correo||'', e.estrato||'', e.eps||'', e.nivelFormacion||'', e.ocupacion||'', e.discapacidad||'No aplica', (e.poblacion||[]).join('; '), tituloProg(e.programa), progDe(e.programa).registro||'', e.jornada||'', semDiff(e.cohorte, per) + 1, e.fechaMatricula||'', esRet(e) ? 'Retirado' : e.graduado ? 'Certificado' : 'Matriculado']));
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Matrícula ' + per);
+  const wb = XLSX.utils.book_new(); wb.__sinMarca = true; XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Matrícula ' + per);
   bajar(`SIET matrícula ${IN()} ${per}.xlsx`, new Blob([XLSX.write(wb, {bookType:'xlsx', type:'array'})], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
 }
 
@@ -3254,6 +3254,27 @@ function cobroTexto(d){
   L.push('', 'Si ya pagó, envíenos el comprobante.', '', ...firmaTxt());
   return L.join('\n');
 }
+
+/* Marca SkyNet Genesis en todos los documentos generados (directiva de skynetgenesis.com) */
+const SKYNET = { nombre:'SkyNet Genesis', correo:'contacto@skynetgenesis.com', wa:'304 437 5758', waLink:'https://wa.me/573044375758' };
+const SKYNET_TXT = `Generado con AcademIA ETDH · ${SKYNET.nombre} · ${SKYNET.correo} · WhatsApp ${SKYNET.wa}`;
+function marcarPdf(doc){
+  if (!doc || doc.__skynet) return; doc.__skynet = true;
+  const n = doc.internal.getNumberOfPages(), cur = doc.internal.getCurrentPageInfo?.().pageNumber || n;
+  for (let i = 1; i <= n; i++){ doc.setPage(i); const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(120,132,138); doc.text(SKYNET_TXT, W/2, H - 12, {align:'center'}); }
+  doc.setPage(cur);
+}
+(function enganchar(){
+  const J = window.jspdf && window.jspdf.jsPDF;
+  if (J && !J.__skynet){ const JM = function(...a){ const d = new J(...a), o = d.output, sv = d.save;
+      d.output = function(){ marcarPdf(d); return o.apply(d, arguments); }; if (sv) d.save = function(){ marcarPdf(d); return sv.apply(d, arguments); }; return d; };
+    Object.assign(JM, J); JM.API = J.API; JM.__skynet = true; window.jspdf.jsPDF = JM; }
+  if (typeof XLSX !== 'undefined' && !XLSX.__skynet){ XLSX.__skynet = true; const w = XLSX.write;
+    XLSX.write = function(wb, opt){ if (wb && !wb.__sinMarca && !(wb.SheetNames || []).includes('SkyNet Genesis')){
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Generado con AcademIA ETDH'], ['Una aplicación de ' + SKYNET.nombre], ['Correo', SKYNET.correo], ['WhatsApp', SKYNET.wa], ['Página', 'https://skynetgenesis.com']]), 'SkyNet Genesis'); }
+      return w.apply(this, arguments); }; }
+})();
 
 /* PDF */
 function nuevoPdf(tituloDer, subDer, orient){
