@@ -1,8 +1,4 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <meta name="description" content="AcademIA ETDH: gestión académica y financiera para instituciones de Educación para el Trabajo y el Desarrollo Humano. Demostración con datos ficticios.">
 <title>AcademIA ETDH · Demostración</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%22192%22%20height%3D%22192%22%20rx%3D%2246%22%20fill%3D%22%231E3A4C%22/%3E%3Cg%20stroke%3D%22%23FFFFFF%22%20stroke-linecap%3D%22round%22%3E%3Cpolygon%20points%3D%22100%2C42%20150.2%2C71%20150.2%2C129%20100%2C158%2049.8%2C129%2049.8%2C71%22%20fill%3D%22none%22%20stroke-opacity%3D%22.35%22%20stroke-width%3D%224%22/%3E%3Cpath%20d%3D%22M100%20100L100%2042M100%20100L150.2%2071M100%20100L150.2%20129M100%20100L100%20158M100%20100L49.8%20129M100%20100L49.8%2071%22%20stroke-width%3D%226%22/%3E%3C/g%3E%3Cg%20fill%3D%22%23FFFFFF%22%3E%3Ccircle%20cx%3D%22150.2%22%20cy%3D%2271%22%20r%3D%2210%22/%3E%3Ccircle%20cx%3D%22150.2%22%20cy%3D%22129%22%20r%3D%2210%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22158%22%20r%3D%2210%22/%3E%3Ccircle%20cx%3D%2249.8%22%20cy%3D%22129%22%20r%3D%2210%22/%3E%3Ccircle%20cx%3D%2249.8%22%20cy%3D%2271%22%20r%3D%2210%22/%3E%3C/g%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%2242%22%20r%3D%2213%22%20fill%3D%22%23E0A21A%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%2220%22%20fill%3D%22%23E0A21A%22/%3E%3C/svg%3E">
@@ -313,8 +309,6 @@ body.portal .gbus{display:none}
 :root[data-theme="dark"]{--bg:#0F181D;--surface:#162228;--surface-2:#1E2D34;--ink:#E4ECEE;--muted:#98A9B0;--line:#2A3A42;--accent:#F0B53A;--accent-ink:#1A1405;--accent-soft:#3A3018;--gold:#F0B53A;--gold-bg:#3A3018;--ok:#62C48E;--ok-bg:#163020;--warn:#E9C052;--warn-bg:#352C12;--bad:#EE7B67;--bad-bg:#3B1E19;--na:#8395A0;--rl-amber:#F0B53A;--rl-amber-text:#F0B53A;--rl-on-primary:#1A1405;--rl-primary:#F0B53A;color-scheme:dark}
 
 </style>
-</head>
-<body>
 <div class="wrap">
   <div id="barra"></div>
   <div id="susBar"></div>
@@ -570,8 +564,10 @@ const dipSaldo = d => d.anulado ? 0 : Math.max((Number(d.valorTotal)||0) - (Numb
 const dipDe = eid => S.dip.filter(d => d.estudiante === eid && !d.anulado);
 const saldoOtros = eid => (S.est[eid] ? matriculaItems(S.est[eid]).reduce((a,x) => a + x.valor, 0) : 0) + supDe(eid).reduce((a,s) => a + supSaldo(s), 0) + dipDe(eid).reduce((a,d) => a + dipSaldo(d), 0) + S.cargos.filter(c => c.estudiante === eid).reduce((a,c) => a + (c.anulado ? 0 : Math.max((Number(c.valorTotal)||0) - (Number(c.valor)||0), 0)), 0);
 const matriculaDe = (prog, sk) => { const v = S.cfg.periodos[sk]?.matriculas?.[prog]; return Number(v != null ? v : (S.cfg.programas[prog]?.matricula || 0)); };
-const becaSem = (e, sk = SEM_ACT) => e.beca === false ? 0 : Math.round(matriculaDe(e.programa, sk) * (Number(S.cfg.becaPct)||0) / 100);
-const tieneBeca = e => S.cfg.becaActiva !== false && e.beca !== false;
+/* porcentaje de beca de cada estudiante: puede ser distinto entre uno y otro (0, 25, 50, 60, 100…) */
+const pctBeca = e => { if (S.cfg.becaActiva === false || !e || e.beca === false) return 0; const p = e.becaPct; return Math.max(0, Math.min(100, Number(p === undefined || p === null || p === '' ? S.cfg.becaPct : p) || 0)); };
+const becaSem = (e, sk = SEM_ACT) => Math.round(matriculaDe(e.programa, sk) * pctBeca(e) / 100);
+const tieneBeca = e => pctBeca(e) > 0;
 /* matrícula pendiente por semestre (solo si no tiene beca completa) — misma regla que el servidor */
 function matriculaItems(e){
   if (!e.cohorte) return [];
@@ -634,7 +630,14 @@ function numeroALetras(n){
 const IN = () => S.cfg.institucion.nombre || 'La institución';
 const instLargo = () => { const l = S.cfg.institucion.nombreLargo || ''; return l && l !== IN() ? IN() + ' – ' + l : IN(); };
 const NC = () => S.cfg.nombreCuota || 'Campus virtual';
-const txtEfectivo = () => IN() + ' no recibe dinero en efectivo. Todo pago debe hacerse por los medios indicados.';
+const txtEfectivo = () => { const m = S.cfg.medios || {}; return m.efectivo ? 'También puede pagar en efectivo ' + (m.efectivoLugar ? 'en ' + m.efectivoLugar : 'en la institución') + '; pida siempre su recibo.' : IN() + ' no recibe dinero en efectivo. Todo pago debe hacerse por los medios indicados.'; };
+/* texto de "Datos para el pago" armado con los medios que usa la institución */
+function armarInstrucciones(m, bold){ const L = [];
+  if (m.llave) L.push(`Llave: ${m.llave}${m.titular ? ' (a nombre de ' + m.titular + ')' : ''}. Desde la app de su banco elija "Enviar con llave" y envíe el comprobante.`);
+  if (bold) L.push('Pago en línea con Bold (PSE, Nequi, tarjeta, Bancolombia): desde el portal del estudiante, botón "Pagar en línea".');
+  if (m.efectivo) L.push('Efectivo: ' + (m.efectivoLugar || 'en la institución') + '.');
+  if (m.otras) L.push(m.otras);
+  return L.join('\n'); }
 const txtCuota = () => (S.cfg.textoCuota || '').trim() || `El campus virtual es una plataforma disponible las 24 horas, todos los días, durante todo el semestre. Se paga con una cuota mensual fija: no es un cobro por horas ni por días de uso, y su valor no cambia según cuánto se use. El alojamiento (hosting) y la operación del campus virtual son un servicio externo que ${IN()} contrata y paga cada mes a un proveedor.`;
 
 /* ====================== render ====================== */
@@ -653,7 +656,7 @@ function render(){
   if (rol === 'profesor') S.area = 'academico'; if (rol === 'contador') S.area = 'cartera';
   $('#areas').hidden = rol === 'profesor' || rol === 'contador';
   $$('#areas button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.area === S.area)));
-  const vis = b => b.dataset.roles.split(' ').includes(rol) && b.dataset.area.split(' ').includes(S.area) && (!b.dataset.fn || tiene(b.dataset.fn));
+  const vis = b => b.dataset.roles.split(' ').includes(rol) && b.dataset.area.split(' ').includes(S.area) && (!b.dataset.fn || tiene(b.dataset.fn)) && !(b.dataset.tab === 'referidos' && S.cfg.referidosActivo === false);
   $$('nav.tabs button').forEach(b => b.hidden = !vis(b));
   if (!$$('nav.tabs button').some(b => b.dataset.tab === S.tab && vis(b))){ S.tab = ($$('nav.tabs button').find(vis) || {}).dataset?.tab || 'tablero'; $('#view').innerHTML = ''; }
   const cart = S.area === 'cartera' && rol !== 'profesor';
@@ -673,15 +676,15 @@ function renderKpis(){
   const alDia = ests.filter(e => vencidoEst(e) === 0).length;
   const pct = ests.length ? Math.round(alDia/ests.length*100) : 0;
   const becas = ests.filter(e => { const n = semestreNum(e); return n >= 1 && n <= semestresProg(e); }).reduce((a,e) => a + becaSem(e), 0);
-  const sinBeca = ests.filter(e => e.beca === false).length;
+  const sinBeca = ests.filter(e => !tieneBeca(e)).length;
   const [y, s] = SEM_ACT.split('-');
-  const nb = ests.filter(e => { const n = semestreNum(e); return n >= 1 && n <= semestresProg(e) && e.beca !== false; }).length;
+  const nb = ests.filter(e => { const n = semestreNum(e); return n >= 1 && n <= semestresProg(e) && tieneBeca(e); }).length;
   $('#kpis').innerHTML = `
     <div class="kpi"><div class="l">Recaudado ${esc(NC().toLowerCase())} ${y}-${s}</div><div class="v">${money(recSem)}</div><div class="d">Pagos aplicados a meses del semestre</div></div>
     <div class="kpi ${pend>0?'alert':''}"><div class="l">Saldo pendiente campus</div><div class="v">${money(pend)}</div><div class="d">${pendSup ? 'Más ' + money(pendSup) + ' en otros conceptos' : 'Cuotas vencidas hasta ' + MESES[+MES_ACT.slice(5)-1]}</div></div>
     <div class="kpi"><div class="l">Estudiantes al día</div><div class="v">${alDia} <span style="font-size:.6em;color:var(--muted)">de ${ests.length}</span></div>
       <div class="meter" aria-hidden="true"><span style="width:${pct}%"></span></div><div class="d">${ests.length - alDia} con cuotas vencidas${enGracia() ? ' · la de ' + MESES[+MES_ACT.slice(5)-1] + ' aún está en días de gracia' : ''}</div></div>
-    <div class="kpi beca"><div class="l">Becas semestrales ${y}-${s}</div><div class="v">${becas ? money(becas) : '—'}</div><div class="d">${becas ? S.cfg.becaPct + '% de la matrícula · ' + nb + ' becados' + (sinBeca ? ' · ' + sinBeca + ' sin beca' : '') : 'Configure el valor de matrícula en Ajustes'}</div></div>`;
+    ${S.cfg.becaActiva === false ? `<div class="kpi"><div class="l">Matrículas ${y}-${s}</div><div class="v">${money(ests.filter(e => { const n = semestreNum(e); return n >= 1 && n <= semestresProg(e); }).reduce((a,e) => a + matriculaDe(e.programa, SEM_ACT), 0))}</div><div class="d">Valor de matrícula de los estudiantes activos (la institución no da beca)</div></div>` : `<div class="kpi beca"><div class="l">Becas semestrales ${y}-${s}</div><div class="v">${becas ? money(becas) : '—'}</div><div class="d">${becas ? nb + ' con beca' + (sinBeca ? ' · ' + sinBeca + ' sin beca' : '') : 'Configure el valor de matrícula en Parametrización'}</div></div>`}`;
 }
 
 function cellHtml(e, m){
@@ -859,7 +862,7 @@ function pintarEst(){
   $('#ecards').innerHTML = !ests.length ? `<div class="panel empty">No hay estudiantes con esos filtros.</div>` : `<div class="cards">${ests.slice(0, lim).map(e => { const s = saldoEst(e), ss = saldoOtros(e.id); return `<article class="scard">
     <div><h3>${esc(e.nombre)}</h3><div class="tags"><span class="pill prog">${esc(progNombre(e.programa))}</span>${esRet(e) ? `<span class="pill ${porConfirmar(e)?'warn':''}">${porConfirmar(e)?'Retiro por confirmar':'Retirado'}</span>` : `<span class="pill">${esc(semestreTxt(e))}</span>`}${s+ss>0?`<span class="pill bad">Debe ${money(s+ss)}</span>`:`<span class="pill ok">${esRet(e)?'Paz y salvo':'Al día'}</span>`}</div></div>
     <dl><dt>Ingresó</dt><dd>${esc(e.cohorte||'—')}</dd><dt>Cuota campus</dt><dd>${money(cuotaDe(e, MES_ACT))}</dd>
-    ${S.cfg.becaActiva!==false ? (e.beca===false ? `<dt>Beca</dt><dd style="color:var(--bad)">Sin beca</dd>` : becaSem(e) ? `<dt>Beca semestral</dt><dd style="color:var(--gold)">${money(becaSem(e))}</dd>` : '') : ''}
+    ${S.cfg.becaActiva!==false ? (!tieneBeca(e) ? `<dt>Beca</dt><dd style="color:var(--bad)">Sin beca</dd>` : `<dt>Beca semestral</dt><dd style="color:var(--gold)">${pctBeca(e)}%${becaSem(e) ? ' · ' + money(becaSem(e)) : ''}</dd>`) : ''}
     <dt>Total pagado</dt><dd>${money(totalPagado(e.id))}</dd>
     ${esRet(e)?`<dt>Último mes cobrado</dt><dd>${mesLabel(e.fin)}</dd>`:''}
     ${ss?`<dt>Supletorios</dt><dd style="color:var(--bad)">${money(ss)}</dd>`:''}</dl>
@@ -1615,53 +1618,66 @@ async function openPortalAcceso(eid){
 
 /* ---------- integraciones en parametrización ---------- */
 function integracionesHtml(){
-  const c = S.cfg, pl = c.pagosLinea || {}, mo = c.moodle || {}, po = c.portal || {}, co = c.cobro;
-  return `<section><h4>Portal del estudiante</h4><p>El estudiante entra con su documento y un código que usted le envía desde su ficha (botón "Acceso al portal").</p>
-      <label class="chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="poAct" ${po.activo?'checked':''}> Activar el portal</label>
-      <label class="chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="poCons" ${po.constancias?'checked':''}> Permitir descargar constancias de estudio desde el portal</label>
+  const c = S.cfg, pl = c.pagosLinea || {}, mo = c.moodle || {}, po = c.portal || {}, co = c.cobro, md = c.medios || {};
+  const plat = tiene('moodle');
+  return `<section><h4>Portal del estudiante</h4><p>Es la página donde cada estudiante entra con su documento y un código (se lo envía desde su ficha, botón "Acceso al portal"). Ahí ve su saldo, notas y asistencia, paga, envía comprobantes y pide constancias y otros servicios. Marque solo lo que su institución quiera ofrecer:</p>
+      <label class="chk" style="flex-direction:row;color:var(--ink);flex-basis:100%"><input type="checkbox" id="poAct" ${po.activo?'checked':''}> Activar el portal del estudiante</label>
+      <label class="chk" style="flex-direction:row;color:var(--ink);flex-basis:100%"><input type="checkbox" id="poAuto" ${po.autoEmitir!==false?'checked':''}> Cuando el estudiante pague una constancia, generarla sola y avisarle por correo (sin esperar a la secretaría)</label>
+      <label class="grow" style="flex-basis:100%">Correo de quien atiende los otros servicios pagados (carnet, duplicados…)<input class="field" id="poAvi" value="${esc(po.avisar || '')}" placeholder="secretaria@suinstitucion.com"></label>
+      <label class="chk" style="flex-direction:row;color:var(--ink);flex-basis:100%"><input type="checkbox" id="poCons" ${po.constancias?'checked':''}> Permitir descargar constancias <b>gratis</b>, sin pedirlas ni pagarlas (normalmente se deja sin marcar)</label>
       <div id="poLink" style="flex-basis:100%;font-size:13px;color:var(--muted)"></div></section>
-    <section><h4>Pagos en línea (Wompi: PSE, Nequi, tarjetas, botón Bancolombia)</h4><p>Necesita una cuenta de comercio en Wompi. Copie aquí las llaves que Wompi le da en su panel (Desarrolladores). Cuando el banco aprueba el pago, este se registra solo, con su recibo, y se aplica a lo más antiguo que deba el estudiante.</p>
-      <label class="chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="plAct" ${pl.activo?'checked':''}> Activar pagos en línea en el portal</label>
-      <label class="grow">Llave pública<input class="field mono" id="plPub" value="${esc(pl.publica||'')}" placeholder="pub_prod_…"></label>
-      <label class="grow">Secreto de integridad<input class="field mono" id="plInt" type="password" autocomplete="off" placeholder="Se guarda en el servidor"></label>
-      <label class="grow">Secreto de eventos<input class="field mono" id="plEvt" type="password" autocomplete="off" placeholder="Se guarda en el servidor"></label>
-      <label class="grow" style="flex-basis:100%">Página a la que vuelve el estudiante después de pagar<input class="field" id="plRet" value="${esc(pl.retorno||'')}" placeholder="Ej. el enlace del portal"></label>
-      <div id="plInfo" style="flex-basis:100%;font-size:13px;color:var(--muted)"></div></section>
-    <section><h4>Moodle (campus virtual)</h4><p>Suspende en Moodle a quien deba el número de cuotas indicado y lo reactiva cuando se pone al día. Se ejecuta cada día con el envío automático. En Moodle hay que activar los servicios web y crear un token con las funciones core_user_get_users_by_field y core_user_update_users.</p>
+    <section><h4>Cómo le pagan los estudiantes</h4><p>Marque los medios que acepta su institución. Aparecen en el portal, en las cuentas de cobro y en los correos.</p>
+      <label class="grow">Llave (número de celular, cédula, correo o alias)<input class="field mono" id="mdLl" value="${esc(md.llave || '')}" placeholder="Ej. 3001234567"></label>
+      <label class="grow">A nombre de<input class="field" id="mdTi" value="${esc(md.titular || '')}" placeholder="Ej. Instituto ABC S.A.S."></label>
+      <label class="chk" style="flex-direction:row;color:var(--ink);flex-basis:100%"><input type="checkbox" id="mdEf" ${md.efectivo?'checked':''}> Recibe pagos en efectivo</label>
+      <label class="grow" style="flex-basis:100%">Dónde y en qué horario recibe efectivo<input class="field" id="mdEfL" value="${esc(md.efectivoLugar || '')}" placeholder="Ej. en la secretaría, de lunes a viernes de 8 a. m. a 5 p. m."></label>
+      <label class="grow" style="flex-basis:100%">Otros datos para el pago (opcional)<textarea class="field" id="mdOt" placeholder="Ej. Cuenta de ahorros Banco X No. 000-000000-00">${esc(c.medios ? (md.otras || '') : (c.instrucciones || ''))}</textarea></label>
+      ${tiene('pagosLinea') ? `<div style="flex-basis:100%;border-top:1px solid var(--line);padding-top:10px"><b>Pago en línea con Bold</b> (PSE, Nequi, tarjetas, botón Bancolombia). Necesita una cuenta en Bold. En el panel de Bold, en "Integraciones", copie sus dos llaves y péguelas aquí. Cuando el pago se aprueba, queda registrado solo, con su recibo.</div>
+      <label class="chk" style="flex-direction:row;color:var(--ink);flex-basis:100%"><input type="checkbox" id="plAct" ${pl.activo?'checked':''}> Activar el pago en línea con Bold en el portal</label>
+      <label class="grow">Llave de identidad<input class="field mono" id="plBid" value="${esc(pl.boldIdentidad||'')}" placeholder="Llave de identidad de Bold"></label>
+      <label class="grow">Llave secreta<input class="field mono" id="plBsec" type="password" autocomplete="off" placeholder="Se guarda en el servidor"></label>
+      <div id="plInfo" style="flex-basis:100%;font-size:13px;color:var(--muted)"></div>` : '<p style="flex-basis:100%" class="who">El pago en línea con Bold viene en los planes Profesional e Integral.</p>'}</section>
+    ${plat ? `<section><h4>Campus virtual (plataforma académica Moodle)</h4><p>Bloquea en el campus virtual a quien no haya pagado su cuota y lo reactiva apenas se pone al día. El bloqueo se hace a la medianoche del día que usted indique abajo. Para conectarlo, en Moodle se activan los servicios web y se crea un token con las funciones core_user_get_users_by_field y core_user_update_users.</p>
       <label class="chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="moAct" ${mo.activo?'checked':''}> Suspender y reactivar automáticamente</label>
-      <label class="grow">Dirección de Moodle<input class="field" id="moUrl" value="${esc(mo.url||'')}" placeholder="https://campus.suinstitucion.edu.co"></label>
+      <label class="grow">Dirección de la plataforma<input class="field" id="moUrl" value="${esc(mo.url||'')}" placeholder="https://campus.suinstitucion.edu.co"></label>
       <label class="grow">Token del servicio web<input class="field mono" id="moTok" type="password" autocomplete="off" placeholder="Se guarda en el servidor"></label>
-      <label>Buscar al estudiante en Moodle por<select class="field" id="moCampo">${[['username','Usuario = número de documento'],['idnumber','Número de ID = documento'],['email','Correo']].map(([k,t]) => `<option value="${k}" ${mo.campo===k?'selected':''}>${t}</option>`).join('')}</select></label>
-      <label>Suspender cuando deba<input class="field" id="moCuotas" inputmode="numeric" value="${esc(mo.cuotas||2)}" style="width:70px"> cuotas</label>
+      <label>Buscar al estudiante por<select class="field" id="moCampo">${[['username','Usuario = número de documento'],['idnumber','Número de ID = documento'],['email','Correo']].map(([k,t]) => `<option value="${k}" ${mo.campo===k?'selected':''}>${t}</option>`).join('')}</select></label>
+      <label>Bloquear si no ha pagado el día<input class="field" id="moDia" inputmode="numeric" value="${esc(mo.diaBloqueo ?? co.gracia ?? 5)}" style="width:90px"></label>
+      <label>Cuotas sin pagar para bloquear<input class="field" id="moCuotas" inputmode="numeric" value="${esc(mo.cuotas||1)}" style="width:90px"></label>
+      <p style="flex-basis:100%;margin:4px 0 0" class="who">Ejemplo: día 5 y 1 cuota = quien no haya pagado el mes, queda bloqueado al terminar el día 5. Cuidado con el espacio del servidor: en el campus suba videos a YouTube (ocultos) y documentos pesados a Google Drive, y ponga solo el enlace.</p>
       ${DEMO ? '' : '<button class="btn sm" type="button" id="moProbar">Probar conexión</button><button class="btn sm" type="button" id="moVer">Ver a quién se suspendería</button>'}
-      <div id="moInfo" style="flex-basis:100%;font-size:13px;color:var(--muted)"></div></section>
+      <div id="moInfo" style="flex-basis:100%;font-size:13px;color:var(--muted)"></div></section>`
+    : `<section><h4>Campus virtual (plataforma académica Moodle)</h4><p>Es un servicio adicional, aparte del plan: se instala un campus virtual propio para la institución (cursos virtuales) que además bloquea y reactiva a los estudiantes según sus pagos. Tiene un costo mensual adicional según el número de estudiantes. Si le interesa, escríbanos a contacto@skynetgenesis.com o al WhatsApp 304 437 5758.</p></section>`}
     <section><h4>Recordatorio antes de vencer</h4>
       <label class="chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="coRec" ${co.recordatorio?'checked':''}> Avisar a los estudiantes al día que se acerca la próxima cuota</label>
       <label>Días antes del 1 de cada mes<input class="field" id="coDA" inputmode="numeric" value="${esc(co.diasAntes||3)}" style="width:70px"></label></section>`;
 }
 function leerIntegraciones(){
-  return { portal:{ activo:$('#poAct').checked, constancias:$('#poCons').checked },
-    pagosLinea:{ activo:$('#plAct').checked, publica:$('#plPub').value.trim(), retorno:$('#plRet').value.trim() },
-    moodle:{ activo:$('#moAct').checked, url:$('#moUrl').value.trim(), campo:$('#moCampo').value, cuotas:parseMoney($('#moCuotas').value) || 2 } };
+  const medios = { llave:$('#mdLl').value.trim(), titular:$('#mdTi').value.trim(), efectivo:$('#mdEf').checked, efectivoLugar:$('#mdEfL').value.trim(), otras:$('#mdOt').value.trim() };
+  const pagosLinea = $('#plAct') ? { activo:$('#plAct').checked, boldIdentidad:$('#plBid').value.trim(), pasarela:'bold' } : (S.cfg.pagosLinea || {});
+  const r = { portal:{ activo:$('#poAct').checked, constancias:$('#poCons').checked, autoEmitir:$('#poAuto').checked, avisar:$('#poAvi').value.trim() }, medios, pagosLinea,
+    instrucciones: armarInstrucciones(medios, !!pagosLinea.activo && !!pagosLinea.boldIdentidad) };
+  if ($('#moAct')) r.moodle = { activo:$('#moAct').checked, url:$('#moUrl').value.trim(), campo:$('#moCampo').value, cuotas:parseMoney($('#moCuotas').value) || 1, diaBloqueo:Math.min(28, parseMoney($('#moDia').value)) };
+  return r;
 }
 async function guardarSecretos(){
-  const b = { integridad:$('#plInt')?.value || '', eventos:$('#plEvt')?.value || '', moodleToken:$('#moTok')?.value || '' };
-  if (DEMO || (!b.integridad && !b.eventos && !b.moodleToken)) return;
+  const b = { boldSecreta:$('#plBsec')?.value || '', moodleToken:$('#moTok')?.value || '' };
+  if (DEMO || (!b.boldSecreta && !b.moodleToken)) return;
   await api('integraciones_guardar', b);
 }
 function activarIntegraciones(){
   if (DEMO){ $('#poLink').textContent = 'El enlace del portal aparece en la versión instalada.'; return; }
   api('integraciones').then(j => {
     $('#poLink').innerHTML = `Enlace del portal: <span class="mono" style="user-select:all">${esc(j.portal)}</span>`;
-    $('#plInfo').innerHTML = `${j.wompi ? '<span class="pill ok">Secretos de Wompi guardados</span> ' : ''}En Wompi, en "URL de eventos", pegue: <span class="mono" style="user-select:all">${esc(j.webhook)}</span>`;
-    if (j.moodle) $('#moInfo').innerHTML = '<span class="pill ok">Token de Moodle guardado</span>';
+    if ($('#plInfo')) $('#plInfo').innerHTML = `${j.bold ? '<span class="pill ok">Llave secreta de Bold guardada</span> ' : ''}En Bold, en "Webhooks", agregue esta dirección: <span class="mono" style="user-select:all">${esc(j.webhook)}</span>`;
+    if (j.moodle && $('#moInfo')) $('#moInfo').innerHTML = '<span class="pill ok">Token guardado</span>';
   }).catch(() => {});
   $('#moProbar')?.addEventListener('click', async () => { try { await guardarSecretos(); await guardarAjustes(null, 'Ajustes guardados'); const j = await api('moodle_probar'); toast('Conectado a ' + j.sitio); } catch(x){ toast(x.message); } });
   $('#moVer')?.addEventListener('click', async () => { try { const j = await api('moodle_sync', { soloReporte:true }); $('#moInfo').innerHTML = j.cambios.length ? `${j.cambios.length} cambio(s): ` + j.cambios.slice(0, 40).map(c => `${esc(c.nombre)} → ${c.accion} (${c.cuotas} cuotas)${c.error ? ' <b style="color:var(--bad)">' + esc(c.error) + '</b>' : ''}`).join(' · ') + (j.cambios.length > 40 ? ' …' : '') + (j.cambios.some(c => c.error) ? '<br>Los que dicen "sin documento" no se pueden suspender hasta completar su ficha de matrícula.' : '') : 'No hay cambios pendientes.'; } catch(x){ toast(x.message); } });
 }
 
 /* ---------- carga masiva de estudiantes ---------- */
-const COLS_IMP = [['apellidos','Apellidos'],['nombres','Nombres'],['tipoDoc','Tipo de documento (CC, TI, CE, PA, PPT)'],['documento','Número de documento'],['programa','Código del programa'],['cohorte','Semestre de ingreso (ej. 2026-2)'],['jornada','Jornada'],['telefono','Teléfono'],['correo','Correo'],['beca','Beca (Sí/No)'],['fechaNacimiento','Fecha de nacimiento (AAAA-MM-DD)'],['genero','Género'],['direccion','Dirección'],['municipio','Municipio de residencia'],['estrato','Estrato'],['eps','EPS']];
+const COLS_IMP = [['apellidos','Apellidos'],['nombres','Nombres'],['tipoDoc','Tipo de documento (CC, TI, CE, PA, PPT)'],['documento','Número de documento'],['programa','Código del programa'],['cohorte','Semestre de ingreso (ej. 2026-2)'],['jornada','Jornada'],['telefono','Teléfono'],['correo','Correo'],['beca','Beca (% de la matrícula, o Sí/No)'],['fechaNacimiento','Fecha de nacimiento (AAAA-MM-DD)'],['genero','Género'],['direccion','Dirección'],['municipio','Municipio de residencia'],['estrato','Estrato'],['eps','EPS']];
 function plantillaImport(){
   if (typeof XLSX === 'undefined') return toast('No se pudo preparar el Excel. Recargue la página.');
   const wb = XLSX.utils.book_new(), ws = XLSX.utils.aoa_to_sheet([COLS_IMP.map(c => c[1]), ['PÉREZ GÓMEZ','ANA MARÍA','CC','1082000000', Object.keys(S.cfg.programas)[0] || 'ADM', SEM_ACT, 'Diurna', '3000000000', 'ana@correo.com', 'Sí', '2000-05-20', 'Femenino', 'Calle 1 # 2-3', 'Santa Marta', '2', 'Nueva EPS']]);
@@ -1703,7 +1719,7 @@ function openImportar(){
     const ops = ok.map(({ o, doc, prog }) => { const ap = o.apellidos.toUpperCase(), no = o.nombres.toUpperCase(), coh = o.cohorte, ini = semMeses(coh)[0];
       return { op:'set', c:'estudiantes', id:'e' + (ap + no).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'').slice(0,20) + Math.random().toString(36).slice(2,6),
         data:{ nombre:ap + ' ' + no, apellidos:ap, nombres:no, tipoDoc:(o.tipoDoc||'').toUpperCase(), documento:doc, programa:prog, cohorte:coh, inicio:ini, fin:finDe(coh, prog), jornada:o.jornada, telefono:o.telefono, correo:o.correo,
-          beca: !/^n/i.test(o.beca), fechaNacimiento:o.fechaNacimiento, genero:o.genero, direccion:o.direccion, municipio:o.municipio, estrato:o.estrato, eps:o.eps, fechaMatricula:HOY, activo:true, creado:now, creadoPor:SES?.usuario || null } }; });
+          ...(() => { const v = String(o.beca ?? '').trim(); if (/^n/i.test(v) || v === '0') return { beca:false, becaPct:0 }; const n = parseFloat(v.replace('%','').replace(',','.')); return isFinite(n) && n > 0 ? { beca:true, becaPct:Math.min(100, n) } : { beca:true }; })(), fechaNacimiento:o.fechaNacimiento, genero:o.genero, direccion:o.direccion, municipio:o.municipio, estrato:o.estrato, eps:o.eps, fechaMatricula:HOY, activo:true, creado:now, creadoPor:SES?.usuario || null } }; });
     try { await guardar(ops); closeDlg(); toast(ops.length + ' estudiantes cargados'); } catch(x){ b.disabled = false; b.textContent = 'Cargar estudiantes'; toast(x.message); }
   };
 }
@@ -1783,7 +1799,7 @@ async function iniciarPortal(inst){
       <h5>Calificaciones</h5><div class="panel">${notas.length ? `<div class="scroller"><table class="ledger"><thead><tr><th>Semestre</th><th>Módulo</th><th class="r">Nota</th></tr></thead><tbody>${modulosProg(e.programa).map(m => ({ m, n:notaDe(e.id, m.id) })).filter(x => x.n).map(({m,n}) => `<tr><td>${m.semestre}</td><td>${esc(m.nombre)}</td><td class="r"><span class="nota-v ${aprueba(n.nota)?'':'baja'}">${fmtNota(n.nota)}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Aún no hay notas registradas.</div>'}</div>
       <h5>Pagos</h5><div class="panel">${S.pagos.length ? `<div class="scroller"><table class="ledger"><thead><tr><th>Fecha</th><th>Concepto</th><th class="r">Valor</th><th>Referencia</th><th></th></tr></thead><tbody>${[...S.pagos].filter(p => !p.anulado).sort((a,b) => (b.mes||'').localeCompare(a.mes||'')).map(p => `<tr><td>${fechaLabel(p.fecha)}</td><td>${esc(pagoAplica(p))}</td><td class="r money">${money(p.valor)}</td><td class="mono">${esc(p.referencia||'—')}</td><td class="acts">${p.recibo ? `<button class="btn ghost sm" type="button" data-recibo="${esc(p.id)}">Recibo</button>` : ''}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Sin pagos.</div>'}</div>`;
     $('#ptEst').onclick = () => cartaPdf(d);
-    $('#ptPagar')?.addEventListener('click', async () => { try { const r = await api('portal_pagar', {}); location.href = r.url; } catch(x){ toast(x.message); } });
+    $('#ptPagar')?.addEventListener('click', () => pagarBoldDlg('Pagar en línea', d.total, () => api('portal_pagar', {})));
     const cons = async t => { try { const r = await api('portal_constancia', { tipo:t }); constanciaPdf(e, t, r.numero, 'A quien interese', r.codigo); } catch(x){ toast(x.message); } };
     $('#ptExtra').innerHTML = portalExtra(j, e); portalExtraBind(j, e, cargar);
     $('#ptCs')?.addEventListener('click', () => cons('sin')); $('#ptCc')?.addEventListener('click', () => cons('con'));
@@ -1795,7 +1811,8 @@ function aplicarDatosPortal(){ const r = render; window.__noRender = true; try {
 
 /* ====================== SUSCRIPCIONES: venta del software a otras instituciones ====================== */
 let SUS = null, REG = false, FN = null;
-const FUNC_TXT = { portal:'Portal del estudiante: solicitudes, comprobantes y evaluación docente', cobroAuto:'Cuentas de cobro y recordatorios automáticos por correo y Telegram', pagosLinea:'Pagos en línea (PSE, Nequi, tarjeta) que se registran solos', contabilidad:'Contabilidad: cierre de mes, conciliación bancaria y control de facturación', planeacion:'Planeación de módulos y temas dictados', analitica:'Riesgo de deserción, proyección de caja, metas y resumen semanal', ia:'Asistente con inteligencia artificial', moodle:'Conexión con Moodle (suspende y reactiva por mora)' };
+const FUNC_TXT = { portal:'Portal del estudiante: solicitudes, comprobantes y evaluación docente', cobroAuto:'Cuentas de cobro y recordatorios automáticos por correo y Telegram', pagosLinea:'Pagos en línea (PSE, Nequi, tarjeta) que se registran solos', contabilidad:'Contabilidad: cierre de mes, conciliación bancaria y control de facturación', planeacion:'Planeación de módulos y temas dictados', analitica:'Riesgo de deserción, proyección de caja, metas y resumen semanal', ia:'Asistente con inteligencia artificial' };
+const PA_TXT = 'Campus virtual (plataforma académica Moodle) propio de la institución, que bloquea y reactiva según los pagos';
 const BASE_TXT = ['Estudiantes y ficha de matrícula con datos del SIET (carga desde Excel)', 'Pagos, recibos de caja numerados y cartera mes a mes', 'Becas, referidos, supletorios, seminarios, diplomados y otros cobros', 'Cuentas de cobro y estados de cuenta en PDF y por WhatsApp', 'Calificaciones (también por cortes), asistencia en línea y alertas', 'Constancias con código QR, libro de matrícula, grados y reporte SIET', 'Docentes y nómina, gastos e ingresos, informes con gráficos', 'Usuarios por cargo: director, digitadores, contabilidad y profesores ilimitados'];
 const tiene = f => !FN || FN.includes(f);
 const fechaCorta = f => f ? fechaLabel(String(f).slice(0,10)) : '—';
@@ -1833,6 +1850,7 @@ function planesHtml(planes, actual, elegir, gratis){
     <div class="pv">${money(p.valor)}<span>/mes</span></div><div class="who">Precio mensual según estudiantes activos: ${rangosTxt(p)}${gratis ? ` · pago anual: ${gratis} meses gratis` : ''}</div>
     <ul><li><b>Todo lo básico</b></li><li>${p.digitadores} digitador(es) y ${p.contables} usuario(s) de contabilidad</li>${Object.entries(FUNC_TXT).map(([k,t]) => `<li class="${p.funciones.includes(k) ? '' : 'no'}">${p.funciones.includes(k) ? '✓' : '—'} ${esc(t)}</li>`).join('')}</ul>
     ${elegir && p.id !== actual ? `<button class="btn sm" type="button" data-plansel="${esc(p.id)}">Cambiar a este plan</button>` : ''}</div>`).join('')}</div>
+    <p class="who" style="margin-top:6px"><b>Servicio adicional, aparte de cualquier plan:</b> ${esc(PA_TXT)}. Requiere instalación propia y tiene un costo mensual adicional según el número de estudiantes.</p>
     <details style="margin-top:6px"><summary class="who" style="cursor:pointer">Qué incluye "todo lo básico" (en todos los planes)</summary><ul class="who" style="margin:6px 0 0;padding-left:18px">${BASE_TXT.map(t => `<li>${esc(t)}</li>`).join('')}</ul></details>`;
 }
 async function miSuscripcion(){
@@ -1841,11 +1859,11 @@ async function miSuscripcion(){
   const pill = { prueba:'prog', al_dia:'ok', gracia:'warn', vencida:'bad', cortesia:'ok' }[s.estado] || '';
   openDlg(`${cab('Mi suscripción')}<div class="db">
     <div class="summary"><div>Estado<b><span class="pill ${pill}">${esc(est)}</span></b></div><div>${s.estado === 'prueba' ? 'Prueba hasta' : 'Pagado hasta'}<b>${s.vence ? fechaCorta(s.vence) : '—'}</b></div><div>Estudiantes activos<b>${s.estudiantes}</b></div><div>Plan<b style="font-size:15px">${esc(s.paqueteTxt)}</b></div><div>Valor mensual<b>${money(s.valor)}</b></div></div>
-    <p class="intro" style="margin-top:10px">El valor mensual es el número de estudiantes activos (sin retirados ni graduados) por el valor del plan, con un mínimo. Si su institución crece o disminuye, el valor se ajusta en el siguiente pago.${s.estado !== 'cortesia' ? ` Si no se paga a tiempo hay ${pv.diasGracia} días de gracia; después el sistema queda en modo de solo consulta hasta que se registre el pago.` : ''}</p>
+    <p class="intro" style="margin-top:10px">El valor mensual depende del plan y del paquete de estudiantes activos (sin retirados ni graduados): hasta 100, de 101 a 300 o más de 300. Si su institución cambia de paquete, el valor se ajusta en el siguiente pago.${s.plataformaAcad ? ' Incluye el campus virtual (' + money(s.valorPlataformaAcad) + ' al mes).' : ''}${s.estado !== 'cortesia' ? ` Si no se paga a tiempo hay ${pv.diasGracia} días de gracia; después el sistema queda en modo de solo consulta hasta que se registre el pago.` : ''}</p>
     <h5>Planes${s.estado === 'prueba' ? ' (durante la prueba tiene todo incluido)' : ''}</h5>${planesHtml(j.planes, s.plan, SES.rol === 'director' && s.estado !== 'cortesia', j.mesesGratisAnual)}
     ${s.estado !== 'cortesia' && SES.rol === 'director' ? `<h5>Pagar</h5><div class="filters" style="align-items:flex-end"><label class="chk">Meses a pagar<select class="field" id="smM">${[1,3,6,12].map(m => `<option value="${m}">${m} ${m === 1 ? 'mes' : 'meses'}</option>`).join('')}</select></label>
-      <span class="pill" id="smT"></span>${j.enLinea ? '<button class="btn primary" type="button" id="smPay">Pagar en línea (PSE, Nequi, tarjeta)</button>' : ''}<button class="btn" type="button" id="smCta">Descargar cuenta de cobro</button></div>
-      ${pv.instrucciones ? `<div class="hint" style="margin-top:8px;white-space:pre-line"><b>Pago por transferencia:</b> ${esc(pv.instrucciones)}\nDespués de pagar, envíe el comprobante${pv.telefono ? ' al ' + esc(pv.telefono) : ''}${pv.correo ? ' o a ' + esc(pv.correo) : ''} para registrarlo.</div>` : ''}` : ''}
+      <span class="pill" id="smT"></span>${j.enLinea ? '<button class="btn primary" type="button" id="smPay">Pagar en línea con Bold (PSE, Nequi, tarjeta)</button>' : ''}<button class="btn" type="button" id="smCta">Descargar cuenta de cobro</button></div>
+      ${pv.instrucciones ? `<div class="hint" style="margin-top:8px;white-space:pre-line"><b>Pago por llave o transferencia:</b> ${esc(pv.instrucciones)}\nDespués de pagar, envíe el comprobante${pv.telefono ? ' al ' + esc(pv.telefono) : ''}${pv.correo ? ' o a ' + esc(pv.correo) : ''} para registrarlo.</div>` : ''}` : ''}
     <h5>Pagos realizados</h5>${j.pagos.length ? `<div class="scroller"><table class="mini"><thead><tr><th>No.</th><th>Fecha</th><th>Periodo</th><th class="r">Valor</th><th>Medio</th><th></th></tr></thead><tbody>
       ${j.pagos.map((p,i) => `<tr><td class="mono">${String(p.numero).padStart(5,'0')}</td><td>${fechaCorta(p.fecha)}</td><td>${fechaCorta(p.desde)} a ${fechaCorta(p.hasta)}</td><td class="r money">${money(p.valor)}</td><td>${esc(p.medio || '')}</td><td class="acts"><button class="btn ghost sm" type="button" data-srec="${i}">Recibo</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Todavía no hay pagos registrados.</div>'}
     <p class="who" style="margin-top:10px">Proveedor: ${esc(pv.proveedor || pv.nombre)}${pv.telefono ? ' · ' + esc(pv.telefono) : ''}${pv.correo ? ' · ' + esc(pv.correo) : ''}</p></div>`, true);
@@ -1853,7 +1871,7 @@ async function miSuscripcion(){
   dlg.querySelectorAll('[data-plansel]').forEach(b => b.onclick = async () => { const pl = j.planes.find(x => x.id === b.dataset.plansel); if (!confirm(`¿Cambiar al plan ${pl.nombre}? Con sus ${s.estudiantes} estudiantes activos quedaría en ${money(pl.valor)} al mes, desde su próximo pago.`)) return;
     try { const r = await api('sus_plan', { plan:pl.id }); SUS = r.sus; FN = r.sus.funciones; toast('Plan cambiado a ' + pl.nombre); miSuscripcion(); render(); } catch(e){ toast(e.message); } });
   const pinta = () => { if ($('#smT')) $('#smT').textContent = 'Total: ' + money(tot()) + (Number($('#smM').value) === 12 && j.mesesGratisAnual ? ` (paga ${12 - j.mesesGratisAnual} meses y usa 12)` : ''); }; pinta(); $('#smM')?.addEventListener('change', pinta);
-  $('#smPay')?.addEventListener('click', async () => { try { const r = await api('sus_pagar', { meses:Number($('#smM').value) }); location.href = r.url; } catch(e){ toast(e.message); } });
+  $('#smPay')?.addEventListener('click', () => { const m = Number($('#smM').value); pagarBoldDlg('Pagar la suscripción', tot(), () => api('sus_pagar', { meses:m })); });
   $('#smCta')?.addEventListener('click', () => { const m = Number($('#smM').value), desde = s.vence && s.vence >= HOY ? s.vence : HOY;
     const doc = pdfProveedor(pv, 'CUENTA DE COBRO', fechaLarga(HOY), P => {
       P.linea('Señores: ' + j.institucion.nombre, { bold:true, after:0 }); if (j.institucion.correo) P.linea(j.institucion.correo, { after:12 }); else P.y += 8;
@@ -1905,25 +1923,28 @@ async function plataformaDlg(){
       <label>Proveedor (persona o empresa)<input class="field" id="plProv" value="${esc(p.proveedor)}"></label><label>NIT o cédula<input class="field" id="plNit" value="${esc(p.nit)}"></label>
       <label>Dirección<input class="field" id="plDir" value="${esc(p.direccion)}"></label><label>Teléfono / WhatsApp<input class="field" id="plTel" value="${esc(p.telefono)}"></label>
       <label>Correo de contacto<input class="field" id="plCor" type="email" value="${esc(p.correo)}"></label><label>Correo remitente de avisos (creado en SiteGround)<input class="field" id="plRem" type="email" value="${esc(p.remitente)}"></label>
-      <label class="full">Cómo le pagan por transferencia<textarea class="field" id="plIns" placeholder="Ej.: Llave 300…, Bancolombia ahorros …, a nombre de …">${esc(p.instrucciones)}</textarea></label></div>
-    <h5>Pago en línea de las suscripciones (Wompi, cuenta suya)</h5><div class="form">
-      <label class="full">Llave pública<input class="field mono" id="plWP" value="${esc(p.wompiPublica)}" placeholder="pub_prod_…"></label>
-      <label>Secreto de integridad<input class="field mono" id="plWI" type="password" autocomplete="off" placeholder="${j.wompi ? 'Guardado (escriba otro para cambiarlo)' : 'Se guarda en el servidor'}"></label>
-      <label>Secreto de eventos<input class="field mono" id="plWE" type="password" autocomplete="off" placeholder="${j.wompi ? 'Guardado (escriba otro para cambiarlo)' : 'Se guarda en el servidor'}"></label></div>
-    <div class="who">En Wompi, en "URL de eventos", pegue: <span class="mono" style="user-select:all">${esc(j.webhook)}</span></div>
+      <label class="full">Cómo le pagan por llave o transferencia<textarea class="field" id="plIns" placeholder="Ej.: Llave 304…, a nombre de …">${esc(p.instrucciones)}</textarea></label></div>
+    <h5>Campus virtual (plataforma académica Moodle) — servicio adicional</h5><p class="intro" style="margin-top:0">No va incluido en ningún plan: se instala aparte para cada institución que lo pida y consume recursos del servidor. Actívelo en "Editar" de cada institución. Valor mensual adicional según el paquete de estudiantes:</p><div class="form">
+      ${['Hasta 100 estudiantes','De 101 a 300','Más de 300'].map((t,i) => { const v = (p.preciosPlataformaAcad || [p.valorPlataformaAcad])[i]; return `<label>${t}<input class="field money" data-pap="${i}" inputmode="numeric" value="${v ? Number(v).toLocaleString('es-CO') : ''}"></label>`; }).join('')}
+      <label>Valor de instalación (una vez, informativo)<input class="field money" id="plPAi" inputmode="numeric" value="${p.instalacionPlataformaAcad ? Number(p.instalacionPlataformaAcad).toLocaleString('es-CO') : ''}" placeholder="$ 0"></label></div>
+    <h5>Pago en línea de las suscripciones (Bold, cuenta suya)</h5><div class="form">
+      <label>Llave de identidad<input class="field mono" id="plBI" value="${esc(p.boldIdentidad || '')}" placeholder="Llave de identidad de Bold"></label>
+      <label>Llave secreta<input class="field mono" id="plBS" type="password" autocomplete="off" placeholder="${j.bold ? 'Guardada (escriba otra para cambiarla)' : 'Se guarda en el servidor'}"></label></div>
+    <div class="who">En Bold, en "Webhooks", agregue: <span class="mono" style="user-select:all">${esc(j.webhook)}</span></div>
     <h5>Asistente de IA (Claude)</h5><p class="intro" style="margin-top:0">Para que las instituciones puedan hacer preguntas a sus datos y redactar mensajes. Cree una clave en console.anthropic.com (el uso se cobra a su cuenta) y péguela aquí.</p><div class="form">
       <label class="full">Clave de la API<input class="field mono" id="plIK" type="password" autocomplete="off" placeholder="${j.ia ? 'Guardada (escriba otra para cambiarla)' : 'sk-ant-…'}"></label>
       <label>Modelo<input class="field mono" id="plIM" value="${esc(p.iaModelo || 'claude-sonnet-4-5')}"></label><label>Consultas por institución al día<input class="field" id="plIL" inputmode="numeric" value="${esc(p.iaLimite || 40)}"></label></div>
     <div class="err" id="plE" hidden></div></div>
     <div class="df"><button class="btn" type="button" data-close>Cancelar</button><button class="btn primary" type="submit">Guardar</button></div></form>`, true);
+  ['#plPAi','[data-pap="0"]','[data-pap="1"]','[data-pap="2"]'].forEach(k => moneyInput(k));
   $('#pzT').addEventListener('input', ev => { if (ev.target.matches('.money')) { const n = parseMoney(ev.target.value); ev.target.value = n ? n.toLocaleString('es-CO') : ''; } });
   $('#fPla').onsubmit = async ev => { ev.preventDefault();
     const planes = {}; $$('#pzT tr').forEach(tr => { const q = a => tr.querySelector(a); planes[tr.dataset.plk] = { nombre:q('[data-pln]').value.trim(), precios:[0,1,2].map(i => parseMoney(q(`[data-plp="${i}"]`).value)), digitadores:parseMoney(q('[data-pld]').value), contables:parseMoney(q('[data-plc]').value), funciones:[...tr.querySelectorAll('[data-plf]:checked')].map(c => c.dataset.plf) }; });
     if (Object.values(planes).some(x => !x.nombre)) return errEn('#plE', 'Cada plan necesita un nombre.');
     const body = { plataforma:{ planes, mesesGratisAnual:parseMoney($('#plMG').value), diasPrueba:parseMoney($('#plDP').value), diasGracia:parseMoney($('#plDG').value), diasAviso:parseMoney($('#plDA').value), registroAbierto:$('#plReg').checked, condiciones:$('#plCond').value,
       iaModelo:$('#plIM').value.trim(), iaLimite:parseMoney($('#plIL').value) || 40,
-      nombre:$('#plNom').value, proveedor:$('#plProv').value, nit:$('#plNit').value, direccion:$('#plDir').value, telefono:$('#plTel').value, correo:$('#plCor').value, remitente:$('#plRem').value, instrucciones:$('#plIns').value, wompiPublica:$('#plWP').value },
-      integridad:$('#plWI').value, eventos:$('#plWE').value, iaClave:$('#plIK').value.trim() };
+      nombre:$('#plNom').value, proveedor:$('#plProv').value, nit:$('#plNit').value, direccion:$('#plDir').value, telefono:$('#plTel').value, correo:$('#plCor').value, remitente:$('#plRem').value, instrucciones:$('#plIns').value, boldIdentidad:$('#plBI').value.trim(), preciosPlataformaAcad:[0,1,2].map(i => parseMoney($(`[data-pap="${i}"]`).value)), instalacionPlataformaAcad:parseMoney($('#plPAi').value) },
+      boldSecreta:$('#plBS').value.trim(), iaClave:$('#plIK').value.trim() };
     if (body.plataforma.registroAbierto && !body.plataforma.condiciones.trim()) return errEn('#plE', 'Para abrir el registro escriba las condiciones del servicio.');
     try { await api('plataforma_guardar', body); toast('Planes y cobro guardados'); instituciones(); } catch(e){ errEn('#plE', e.message); } };
 }
@@ -1978,17 +1999,17 @@ async function mostrarRegistro(){
 const MOCK = (() => {
   const d = n => { const x = new Date(HOY + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0,10); };
   const m = (f, k) => { const x = new Date(f + 'T12:00:00'); x.setMonth(x.getMonth() + k); return x.toISOString().slice(0,10); };
-  const st = { plat:{ nombre:'AcademIA ETDH', proveedor:'Su nombre o empresa', nit:'', direccion:'', telefono:'301 000 0000', correo:'ventas@ejemplo.com', remitente:'', instrucciones:'Llave 3000000000 a nombre de …', condiciones:'Ejemplo de condiciones: valor mensual según paquete de estudiantes activos; pago anticipado; soporte por WhatsApp; los datos son de la institución y se tratan según la Ley 1581 de 2012.', diasPrueba:15, diasGracia:5, diasAviso:5, registroAbierto:true, wompiPublica:'',
+  const st = { plat:{ nombre:'AcademIA ETDH', proveedor:'Su nombre o empresa', nit:'', direccion:'', telefono:'301 000 0000', correo:'ventas@ejemplo.com', remitente:'', instrucciones:'Llave 3000000000 a nombre de …', condiciones:'Ejemplo de condiciones: valor mensual según paquete de estudiantes activos; pago anticipado; soporte por WhatsApp; los datos son de la institución y se tratan según la Ley 1581 de 2012.', diasPrueba:15, diasGracia:5, diasAviso:5, registroAbierto:true, wompiPublica:'', boldIdentidad:'', valorPlataformaAcad:248000, preciosPlataformaAcad:[248000,370000,520000], instalacionPlataformaAcad:0,
       mesesGratisAnual:2, planes:{ esencial:{ nombre:'Esencial', precios:[120000,180000,250000], digitadores:1, contables:1, funciones:[] }, profesional:{ nombre:'Profesional', precios:[200000,300000,420000], digitadores:2, contables:2, funciones:['portal','cobroAuto','pagosLinea','contabilidad','planeacion'] }, integral:{ nombre:'Integral con IA', precios:[300000,450000,620000], digitadores:3, contables:3, funciones:Object.keys(FUNC_TXT) } } },
     insts:[ { id:'mi-institucion', _n:'', get nombre(){ return this._n || S.cfg.institucion.nombre || 'Su institución'; }, set nombre(v){ this._n = v; }, activo:1, maxDigitadores:2, maxContables:2, vence:null, prueba:0, est:null, usuarios:3, origen:'administrador' },
       { id:'instituto-ejemplo', nombre:'Instituto Técnico Ejemplo', plan:'integral', activo:1, maxDigitadores:2, maxContables:2, vence:d(6), prueba:1, est:42, usuarios:2, origen:'registro', correo:'rector@ejemplo.edu.co', telefono:'300 111 2233' },
-      { id:'academia-demo', nombre:'Academia Demo', plan:'profesional', activo:1, maxDigitadores:2, maxContables:2, vence:d(-3), prueba:0, est:215, usuarios:4, origen:'administrador', correo:'info@academiademo.co', telefono:'315 222 3344' },
+      { id:'academia-demo', nombre:'Academia Demo', plan:'profesional', plataformaAcad:1, activo:1, maxDigitadores:2, maxContables:2, vence:d(-3), prueba:0, est:215, usuarios:4, origen:'administrador', correo:'info@academiademo.co', telefono:'315 222 3344' },
       { id:'centro-norte', nombre:'Centro de Formación Norte', plan:'esencial', activo:1, maxDigitadores:2, maxContables:2, vence:d(-12), prueba:0, est:88, usuarios:2, origen:'registro', correo:'norte@ejemplo.co', telefono:'320 555 6677' } ],
     pagos:[ { inst:'academia-demo', numero:1, fecha:m(d(-3),-2)+'T10:00:00', meses:1, valor:300000, desde:m(d(-3),-2), hasta:m(d(-3),-1), estudiantes:208, paquete:'Plan Profesional', medio:'Llave', referencia:'LL-50211' },
-      { inst:'academia-demo', numero:2, fecha:m(d(-3),-1)+'T09:30:00', meses:1, valor:300000, desde:m(d(-3),-1), hasta:d(-3), estudiantes:212, paquete:'Plan Profesional', medio:'Pago en línea · PSE', referencia:'WOMPI-1234' } ] };
+      { inst:'academia-demo', numero:2, fecha:m(d(-3),-1)+'T09:30:00', meses:1, valor:300000, desde:m(d(-3),-1), hasta:d(-3), estudiantes:212, paquete:'Plan Profesional', medio:'Pago en línea · Bold', referencia:'BOLD-1234' } ] };
   const planList = n => Object.entries(st.plat.planes).map(([id, p]) => ({ id, ...p, valor:precioPlan(p, n) }));
   const txt = p => p.hasta ? 'Hasta ' + p.hasta + ' estudiantes' : 'Estudiantes ilimitados';
-  const sus = i => { const n = i.est ?? activos().length, pid = st.plat.planes[i.plan] ? i.plan : 'profesional', p = st.plat.planes[pid], b = { estudiantes:n, plan:pid, paqueteTxt:'Plan ' + p.nombre, valor:precioPlan(p, n), precios:p.precios, funciones: !i.vence || i.prueba ? Object.keys(FUNC_TXT) : p.funciones, prueba:!!i.prueba, vence:i.vence, bloqueo:false, aviso:false };
+  const sus = i => { const n = i.est ?? activos().length, pid = st.plat.planes[i.plan] ? i.plan : 'profesional', p = st.plat.planes[pid], pa = i.plataformaAcad ? precioPlan({ precios:st.plat.preciosPlataformaAcad || [st.plat.valorPlataformaAcad,st.plat.valorPlataformaAcad,st.plat.valorPlataformaAcad] }, n) : 0, b = { estudiantes:n, plan:pid, paqueteTxt:'Plan ' + p.nombre + (pa ? ' + Campus virtual' : ''), valor:precioPlan(p, n) + pa, plataformaAcad:!!i.plataformaAcad, valorPlataformaAcad:pa, precios:p.precios, funciones: !i.vence || i.prueba ? [...Object.keys(FUNC_TXT), 'moodle'] : [...p.funciones, ...(pa ? ['moodle'] : [])], prueba:!!i.prueba, vence:i.vence, bloqueo:false, aviso:false };
     if (!i.vence) return { ...b, estado:'cortesia', texto:'Sin cobro', dias:null };
     const dias = Math.round((new Date(i.vence) - new Date(HOY)) / 864e5), gh = (() => { const x = new Date(i.vence + 'T12:00:00'); x.setDate(x.getDate() + st.plat.diasGracia); return x.toISOString().slice(0,10); })();
     if (dias >= 0) return { ...b, estado: i.prueba ? 'prueba' : 'al_dia', texto: i.prueba ? 'Periodo de prueba' : 'Al día', dias, graciaHasta:gh, aviso: dias <= st.plat.diasAviso };
@@ -2002,15 +2023,15 @@ const MOCK = (() => {
   return async (a, b) => {
     const ac = a.split('&')[0];
     if (ac === 'instituciones') return { ok:true, instituciones: st.insts.map(i => ({ ...i, estudiantes: i.est ?? activos().length, sus:sus(i) })) };
-    if (ac === 'plataforma') return { ok:true, plataforma:JSON.parse(JSON.stringify(st.plat)), wompi:false, webhook:'(su dirección)/api.php?a=wompi_sus', registro:'(su dirección)/?registro=1' };
+    if (ac === 'plataforma') return { ok:true, plataforma:JSON.parse(JSON.stringify(st.plat)), bold:false, webhook:'(su dirección)/api.php?a=bold_sus', registro:'(su dirección)/?registro=1' };
     if (ac === 'plataforma_guardar') { Object.assign(st.plat, b.plataforma); return { ok:true }; }
     if (ac === 'sus_registrar') { if (!b.referencia) throw new ApiError('datos', 'Escriba la referencia o número del comprobante.'); return pagar(b.inst, b.meses || 1, b.valor, b.medio, b.referencia); }
     if (ac === 'sus_estado') { const i = st.insts.find(x => x.id === 'academia-demo'); return { ok:true, sus:sus(i), institucion:{ id:i.id, nombre:i.nombre, correo:i.correo }, pagos:st.pagos.filter(p => p.inst === i.id).sort((x,y) => y.numero - x.numero), planes:planList(sus(st.insts.find(x => x.id === 'academia-demo')).estudiantes), mesesGratisAnual:st.plat.mesesGratisAnual, enLinea:true, proveedor:prov() }; }
     if (ac === 'sus_plan') { const i = st.insts.find(x => x.id === 'academia-demo'); i.plan = b.plan; return { ok:true, sus:sus(i) }; }
-    if (ac === 'sus_pagar') throw new ApiError('demo', 'En la versión instalada este botón abre la página segura de Wompi para pagar con PSE, Nequi o tarjeta.');
+    if (ac === 'sus_pagar') throw new ApiError('demo', 'En la versión instalada aquí aparece el botón de Bold para pagar con PSE, Nequi o tarjeta.');
     if (ac === 'registro_info') return { ok:true, nombre:st.plat.nombre, proveedor:st.plat.proveedor, diasPrueba:st.plat.diasPrueba, condiciones:st.plat.condiciones, planes:planList(0), mesesGratisAnual:st.plat.mesesGratisAnual };
     if (ac === 'registro') throw new ApiError('demo', 'En la versión instalada aquí se crea la institución con su director y empieza la prueba gratis.');
-    if (ac === 'institucion_guardar') { const i = st.insts.find(x => x.id === b.id); if (i) Object.assign(i, { nombre:b.nombre, activo:b.activo ? 1 : 0, correo:b.correo, telefono:b.telefono, vence:b.vence || null });
+    if (ac === 'institucion_guardar') { const i = st.insts.find(x => x.id === b.id); if (i) Object.assign(i, { nombre:b.nombre, activo:b.activo ? 1 : 0, correo:b.correo, telefono:b.telefono, vence:b.vence || null, plan:b.plan || i.plan, plataformaAcad:b.plataformaAcad ? 1 : 0 });
       else st.insts.push({ id:b.id || genId('i'), nombre:b.nombre, activo:1, maxDigitadores:b.maxDigitadores, maxContables:b.maxContables, vence: b.inicio === 'cortesia' ? null : b.inicio === 'fecha' ? b.vence : d(st.plat.diasPrueba), prueba: b.inicio === 'prueba' ? 1 : 0, est:0, usuarios:1, origen:'administrador', correo:b.correo, telefono:b.telefono }); return { ok:true }; }
     if (ac === 'entrar_inst') throw new ApiError('demo', 'En la versión instalada usted entra a los datos de esa institución.');
     throw new ApiError('demo', 'Esta acción funciona en la versión instalada en SiteGround.');
@@ -2504,7 +2525,7 @@ function renderIA(){
 function ajustesExtraHtml(){
   const c = S.cfg, sv = serviciosCfg(), cs = c.escala?.cortes || [], rs = c.resumen || {}, mt = c.metas || {};
   const filaS = (k, x) => `<tr data-sv="${esc(k)}"><td><input class="field" data-svn value="${esc(x.nombre)}" style="width:100%"></td><td><select class="field" data-svt>${[['constancia_sin','Constancia sin notas'],['constancia_con','Constancia con notas'],['otro','Otro (se entrega)']].map(([v,t]) => `<option value="${v}" ${x.tipo===v?'selected':''}>${t}</option>`).join('')}</select></td><td class="r"><input class="field money" data-svv inputmode="numeric" value="${x.valor ? Number(x.valor).toLocaleString('es-CO') : ''}" placeholder="$ 0" style="width:110px;text-align:right"></td></tr>`;
-  return `<section style="display:block"><h4>Servicios que el estudiante puede pedir en el portal</h4><p style="margin:4px 0 10px">Al pedirlo se le crea el cobro; cuando pague, la secretaría lo atiende en la pestaña Solicitudes. Para quitar un servicio, deje el nombre vacío.</p>
+  return `<section style="display:block"><h4>Servicios que el estudiante puede pedir en el portal</h4><p style="margin:4px 0 10px">Al pedirlo se le crea el cobro y puede pagarlo en línea. Las constancias pagadas se generan solas; los demás servicios pagados le llegan a la secretaría en la pestaña Solicitudes. Para quitar un servicio, deje el nombre vacío.</p>
       <div class="scroller"><table class="mini"><thead><tr><th>Servicio</th><th>Tipo</th><th class="r">Valor</th></tr></thead><tbody id="svT">${Object.entries(sv).map(([k,x]) => filaS(k,x)).join('')}</tbody></table></div><button class="btn sm" type="button" id="svAdd" style="margin-top:6px">+ Agregar servicio</button></section>
     <section style="display:block"><h4>Notas por cortes</h4><p style="margin:4px 0 10px">Si define cortes (por ejemplo 30%, 30% y 40%), el profesor registra cada corte y la nota final se calcula sola. Déjelo vacío para registrar solo la nota final.</p>
       <div class="scroller"><table class="mini"><thead><tr><th>Corte</th><th class="r">Porcentaje</th></tr></thead><tbody id="ctT">${[0,1,2,3].map(i => `<tr><td><input class="field" data-ctn value="${esc(cs[i]?.n || '')}" placeholder="${['Corte 1','Corte 2','Corte 3','Corte 4'][i]}"></td><td class="r"><input class="field" data-ctp inputmode="numeric" value="${esc(cs[i]?.p || '')}" style="width:70px;text-align:right"> %</td></tr>`).join('')}</tbody></table></div>
@@ -2538,6 +2559,18 @@ function leerAjustesExtra(){
 
 /* ---------- 19-22. portal: semestre, avance, servicios, comprobantes y evaluación docente ---------- */
 const PREG_EVAL = ['Domina los temas del módulo', 'Explica con claridad', 'Cumple el horario y es puntual', 'Trata con respeto a los estudiantes', 'Evalúa de forma justa'];
+/* botón de pagos de Bold: los datos vienen firmados del servidor (la llave secreta nunca llega al navegador) */
+function boldBoton(el, o){
+  el.innerHTML = ''; const sc = document.createElement('script'); sc.src = 'https://checkout.bold.co/library/boldPaymentButton.js'; sc.setAttribute('data-bold-button', 'dark-L');
+  Object.entries({ 'data-api-key':o.apiKey, 'data-amount':o.amount, 'data-currency':o.currency || 'COP', 'data-order-id':o.orderId, 'data-integrity-signature':o.signature, 'data-description':o.description, 'data-redirection-url':o.redirect }).forEach(([k,v]) => { if (v) sc.setAttribute(k, String(v)); });
+  sc.onerror = () => { el.innerHTML = '<div class="hint warn">No se pudo cargar el botón de Bold. Revise su conexión e intente de nuevo.</div>'; };
+  el.appendChild(sc);
+}
+function pagarBoldDlg(titulo, valor, pedir){
+  openDlg(`${cab(titulo)}<div class="db"><p class="intro">Valor a pagar: <b>${money(valor)}</b>. Pulse el botón de Bold y elija cómo pagar: PSE, Nequi, tarjeta o Bancolombia. Cuando el pago quede aprobado se registra solo y le llega el recibo.</p><div id="boldCaja" style="min-height:60px;display:flex;align-items:center;justify-content:center"><span class="who">Preparando el pago seguro…</span></div></div><div class="df"><button class="btn" type="button" data-close>Cerrar</button></div>`);
+  if (DEMO){ $('#boldCaja').innerHTML = '<div class="hint">En la versión instalada aquí aparece el botón de Bold para pagar con PSE, Nequi, tarjeta o Bancolombia.</div>'; return; }
+  pedir().then(r => boldBoton($('#boldCaja'), r.bold)).catch(x => { $('#boldCaja').innerHTML = `<div class="hint warn">${esc(x.message)}</div>`; });
+}
 function portalExtra(j, e){
   const per = j.periodoActual || SEM_ACT, sn = semestreNum(e), dn = j.docentesNombres || {}, ev = new Set(j.evaluados || []);
   const mods = modulosProg(e.programa).filter(m => m.semestre === sn);
@@ -2551,9 +2584,9 @@ function portalExtra(j, e){
       <td class="acts">${m.docente ? (ev.has(m.id) ? '<span class="pill ok">Evaluado</span>' : `<button class="btn sm" type="button" data-pteval="${esc(m.id)}">Evaluar docente</button>`) : ''}</td></tr>`; }).join('')}</tbody></table></div></div>` : ''}
   <h5>Mi avance hacia el grado</h5><div class="panel" style="padding:12px 16px"><div class="meter" aria-hidden="true"><span style="width:${todos.length ? Math.round(aprob/todos.length*100) : 0}%"></span></div>
     <p style="margin:8px 0 0">Módulos aprobados: <b>${aprob} de ${todos.length}</b>${sn ? ` · Semestre ${Math.min(sn, semestresProg(e))} de ${semestresProg(e)}` : ''}.${Object.keys(docs).length ? (faltanDocs.length ? ` Documentos de grado por entregar: <b>${esc(faltanDocs.join(', '))}</b>.` : ' Documentos de grado: <b>completos</b>.') : ''}</p></div>
-  ${Object.keys(sv).length ? `<h5>Pedir un servicio</h5><div class="panel" style="padding:12px 16px"><p class="intro" style="margin-top:0">Al pedirlo se agrega el cobro a su cuenta. Cuando pague, la institución lo atiende y aquí verá cuando esté listo.</p>
+  ${Object.keys(sv).length ? `<h5>Pedir un servicio</h5><div class="panel" style="padding:12px 16px"><p class="intro" style="margin-top:0">${j.pagoLinea ? 'Elija el servicio y páguelo en línea. Las constancias quedan listas para descargar aquí apenas se apruebe el pago, y le llega un aviso al correo.' : 'Al pedirlo se agrega el cobro a su cuenta. Pague por los medios indicados y envíe el comprobante abajo; cuando la institución lo verifique, aquí verá su documento.'}</p>
     <div class="tags">${Object.entries(sv).map(([k,x]) => `<button class="btn sm" type="button" data-ptsol="${esc(k)}">${esc(x.nombre)} · ${money(x.valor)}</button>`).join('')}</div>
-    ${sol.length ? `<div class="scroller" style="margin-top:10px"><table class="mini"><thead><tr><th>Fecha</th><th>Servicio</th><th>Estado</th><th></th></tr></thead><tbody>${sol.map(s => { const st = estS(s); return `<tr><td>${fechaLabel(s.fecha)}</td><td>${esc(s.nombre)}</td><td><span class="pill ${ST[st][0]}">${ST[st][1]}</span>${s.motivoRechazo ? `<span class="who">${esc(s.motivoRechazo)}</span>` : ''}</td><td class="acts">${st === 'emitida' && s.constancia ? `<button class="btn sm primary" type="button" data-ptcon="${esc(s.id)}">Descargar</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>` : ''}</div>` : ''}
+    ${sol.length ? `<div class="scroller" style="margin-top:10px"><table class="mini"><thead><tr><th>Fecha</th><th>Servicio</th><th>Estado</th><th></th></tr></thead><tbody>${sol.map(s => { const st = estS(s); return `<tr><td>${fechaLabel(s.fecha)}</td><td>${esc(s.nombre)}</td><td><span class="pill ${ST[st][0]}">${ST[st][1]}</span>${s.motivoRechazo ? `<span class="who">${esc(s.motivoRechazo)}</span>` : ''}</td><td class="acts">${st === 'emitida' && s.constancia ? `<button class="btn sm primary" type="button" data-ptcon="${esc(s.id)}">Descargar</button>` : ''}${st === 'por pagar' && j.pagoLinea ? `<button class="btn sm primary" type="button" data-ptpay="${esc(s.id)}">Pagar en línea</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>` : ''}</div>` : ''}
   <h5>¿Ya pagó por transferencia o Llave?</h5><div class="panel" style="padding:12px 16px"><p class="intro" style="margin-top:0">Envíe la foto del comprobante para que la institución lo verifique y lo aplique a su cuenta.</p>
     <form id="ptCF" class="form"><label>Valor pagado<input class="field money" id="ptCV" inputmode="numeric" required></label><label>Referencia o número del comprobante<input class="field mono" id="ptCR" required></label>
       <label>Fecha del pago<input class="field" type="date" id="ptCD" value="${HOY}" max="${HOY}"></label><label>Foto del comprobante<input class="field" type="file" id="ptCI" accept="image/*" required></label>
@@ -2563,7 +2596,9 @@ function portalExtra(j, e){
 function portalExtraBind(j, e, recargar){
   moneyInput('#ptCV');
   $$('[data-ptsol]').forEach(b => b.onclick = async () => { const x = j.servicios[b.dataset.ptsol]; if (!confirm(`¿Pedir "${x.nombre}"? Se agregará un cobro de ${money(x.valor)} a su cuenta.`)) return;
-    try { await api('portal_solicitar', { servicio:b.dataset.ptsol }); toast('Solicitud enviada'); recargar(); } catch(err){ toast(err.message); } });
+    try { const r = await api('portal_solicitar', { servicio:b.dataset.ptsol }); toast('Solicitud enviada');
+      if (j.pagoLinea && r.solicitud && x.valor > 0) pagarBoldDlg('Pagar ' + x.nombre, x.valor, () => api('portal_pagar', { solicitud:r.solicitud })); recargar(); } catch(err){ toast(err.message); } });
+  $$('[data-ptpay]').forEach(b => b.onclick = () => { const so = (j.solicitudes || []).find(s => s.id === b.dataset.ptpay); pagarBoldDlg('Pagar ' + (so?.nombre || 'servicio'), so?.valor || 0, () => api('portal_pagar', { solicitud:b.dataset.ptpay })); });
   $$('[data-ptcon]').forEach(b => b.onclick = async () => { try { const r = await api('portal_constancia', { solicitud:b.dataset.ptcon }); constanciaPdf(e, r.tipo, r.numero, r.dirigida, r.codigo); } catch(err){ toast(err.message); } });
   $$('[data-pteval]').forEach(b => b.onclick = () => { const m = modulosProg(e.programa).find(x => x.id === b.dataset.pteval);
     openDlg(`<form id="evF">${cab('Evaluar al docente de ' + esc(m.nombre))}<div class="db"><p class="intro">Su evaluación es anónima: el docente solo ve los promedios. Califique de 1 (muy mal) a 5 (excelente).</p>
@@ -2652,10 +2687,11 @@ function renderAjustes(){
   const c = S.cfg, co = c.cobro, inst = c.institucion;
   const tipos = ['Seminario','Diplomado','Curso'];
   $('#view').innerHTML = `<div class="panel settings">
-    <section style="display:block"><h4>Semestres académicos: cuota mensual y matrícula</h4><p style="margin:4px 0 10px">Al inicio de cada semestre puede cambiar la cuota mensual de ${esc(NC().toLowerCase())} y el valor de la matrícula de cada programa. Los meses fuera de un semestre no se cobran. Para un año nuevo, pulse "Crear siguiente semestre": copia los valores del último semestre.</p>
+    <section style="display:block"><h4>Semestres académicos: cuota mensual y matrícula</h4><p style="margin:4px 0 10px">Al inicio de cada semestre puede cambiar la cuota mensual de ${esc(NC().toLowerCase())} y el valor de la matrícula de cada programa. Los meses fuera de un semestre no se cobran.</p>
+      <div style="margin:0 0 10px"><button class="btn primary sm" type="button" id="cfgSemNuevo2">+ Crear semestre ${esc(semSig(perList().pop() || SEM_ACT))}</button> <span class="who" style="display:inline">Copia los valores del último semestre; después puede cambiarlos.</span></div>
       <div class="scroller"><table class="mini"><thead><tr><th>Semestre</th><th>Primer mes</th><th>Último mes</th><th class="r">Cuota mensual</th>${Object.entries(c.programas).map(([k,p]) => `<th class="r" title="${esc(p.nombre)}">Matrícula ${esc(k)}</th>`).join('')}<th class="r">Derechos de grado</th></tr></thead><tbody>
       ${perList().map(k => { const p = c.periodos[k]; return `<tr><td class="mono"><b>${esc(k)}</b>${k===SEM_ACT?' <span class="pill prog">Actual</span>':''}</td><td><input class="field" type="month" data-pd="${esc(k)}" value="${esc(p.desde)}"></td><td><input class="field" type="month" data-ph="${esc(k)}" value="${esc(p.hasta)}"></td><td class="r"><input class="field money" data-pc="${esc(k)}" inputmode="numeric" value="${Number(p.cuota||0).toLocaleString('es-CO')}" style="width:110px;text-align:right"></td>${Object.keys(c.programas).map(pr => `<td class="r"><input class="field money" data-pm="${esc(k)}|${esc(pr)}" inputmode="numeric" value="${matriculaDe(pr, k) ? matriculaDe(pr, k).toLocaleString('es-CO') : ''}" placeholder="$ 0" style="width:110px;text-align:right"></td>`).join('')}<td class="r"><input class="field money" data-pg="${esc(k)}" inputmode="numeric" value="${p.grado != null && p.grado !== '' ? Number(p.grado).toLocaleString('es-CO') : ''}" placeholder="${c.grado.valor ? Number(c.grado.valor).toLocaleString('es-CO') : '$ 0'}" style="width:110px;text-align:right"></td></tr>`; }).join('')}
-      </tbody></table></div><div style="margin-top:8px"><button class="btn sm" type="button" id="cfgSemNuevo">+ Crear siguiente semestre</button></div></section>
+      </tbody></table></div><div style="margin-top:8px"><button class="btn sm" type="button" id="cfgSemNuevo">+ Crear semestre ${esc(semSig(perList().pop() || SEM_ACT))}</button></div></section>
     <section style="display:block"><h4>Programas</h4><p style="margin:4px 0 10px">Programas que ofrece la institución, cuántos semestres dura cada uno (puede cambiarlo cuando lo necesite) y sus módulos con el docente asignado.</p>
       <div class="scroller"><table class="mini"><thead><tr><th>Código</th><th>Nombre del programa</th><th class="r">Semestres</th><th></th></tr></thead><tbody>
       ${Object.entries(c.programas).map(([k,p]) => `<tr><td class="mono">${esc(k)}</td><td><input class="field" data-pnom="${esc(k)}" value="${esc(p.nombre)}" style="width:100%"></td><td class="r"><input class="field" data-psem="${esc(k)}" inputmode="numeric" value="${p.semestres||c.semestres}" style="width:60px;text-align:right"></td><td class="acts"><button class="btn sm" type="button" data-prog="${esc(k)}">Datos y módulos (${Object.keys(p.modulos||{}).length})</button></td></tr>`).join('')}
@@ -2663,7 +2699,9 @@ function renderAjustes(){
       </tbody></table></div></section>
     <section><h4>Beca semestral</h4><p>Si la institución otorga beca, cada estudiante puede tenerla o no (se marca en su ficha). Con beca, la matrícula se descuenta en el porcentaje indicado; sin beca, se cobra completa.</p>
       <label class="chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="cfgBecaAct" ${c.becaActiva!==false?'checked':''}> La institución otorga beca semestral</label>
-      <label>Porcentaje de beca<input class="field" id="cfgBeca" inputmode="numeric" value="${c.becaPct}" style="width:90px"></label></section>
+      <label>Porcentaje por defecto para estudiantes nuevos<input class="field" id="cfgBeca" inputmode="numeric" value="${c.becaPct}" style="width:90px"></label>
+      <p style="flex-basis:100%;margin:6px 0 0">Cada estudiante puede tener un porcentaje distinto (0, 25, 50, 60, 100…): se cambia en su ficha, en "Editar". Si su institución no da becas, quite la marca y la matrícula se cobra completa a todos.</p>
+      <label class="chk" style="flex-direction:row;color:var(--ink);flex-basis:100%"><input type="checkbox" id="cfgRefAct" ${c.referidosActivo!==false?'checked':''}> Programa de becas por referidos (un mes gratis por cada estudiante nuevo que traiga)</label></section>
     <section><h4>Cuota mensual</h4>
       <label>Nombre de la cuota<input class="field" id="cfgNC" value="${esc(c.nombreCuota||'')}" placeholder="Ej. Campus virtual, Pensión"></label>
       <label class="grow" style="flex-basis:100%">Explicación que aparece en los documentos (vacío = texto del campus virtual)<textarea class="field" id="cfgTC" placeholder="${esc(txtCuota())}">${esc(c.textoCuota||'')}</textarea></label></section>
@@ -2686,7 +2724,8 @@ function renderAjustes(){
       <label>Plazo para pagar (días)<input class="field" id="coPla" inputmode="numeric" value="${co.plazo}" style="width:80px"></label>
       <label>No enviar si debe menos de<input class="field money" id="coMin" inputmode="numeric" value="${Number(co.minimo||0).toLocaleString('es-CO')}" style="width:110px"></label>
       <label class="grow">Correo remitente (creado en SiteGround)<input class="field" id="coRem" type="email" value="${esc(co.remitente)}" placeholder="cartera@suinstitucion.com"></label>
-      <p>Días de gracia: la cuota del mes se causa el día 1, pero la cuenta de cobro automática solo la incluye después de ese número de días.</p></section>
+      <label class="grow">Nombre que verá quien recibe el correo<input class="field" id="coRemN" value="${esc(co.remitenteNombre || '')}" placeholder="Dirección Financiera · ${esc(IN())}"></label>
+      <p>Días de gracia: la cuota del mes se causa el día 1 y vence ese día del mes (por ejemplo, 5 = vence el 5 a medianoche). La cuenta de cobro automática y la suspensión en la plataforma académica empiezan después de ese día.</p></section>
     <section id="botSec"><h4>Bot de Telegram</h4>${DEMO ? '<p>Se conecta en la versión instalada en SiteGround.</p>' : `<p>${co.botUsuario ? `Conectado: <b>@${esc(co.botUsuario)}</b>.` : 'Sin conectar. Cree el bot en Telegram con @BotFather y pegue aquí el token que le entrega.'}</p>
       <label class="grow">Token del bot<input class="field mono" id="botTok" type="password" autocomplete="off" placeholder="${co.botUsuario ? 'Guardado (escriba uno nuevo para cambiarlo)' : '123456789:AA…'}"></label>
       <button class="btn sm" type="button" id="botSave">${co.botUsuario ? 'Cambiar bot' : 'Conectar bot'}</button><div id="cronInfo" style="flex-basis:100%;font-size:13px;color:var(--muted)"></div>`}</section>
@@ -2726,10 +2765,11 @@ function renderAjustes(){
     <section><h4>Firma y datos para el pago</h4>
       <label class="grow">Nombre de quien firma<input class="field" id="cfgFirma" value="${esc(c.firma)}" placeholder="Ej. Ricardo Londoño González"></label>
       <label class="grow">Cargo<input class="field" id="cfgCargo" value="${esc(c.cargo)}" placeholder="Ej. Rector"></label>
-      <label class="grow" style="flex-basis:100%">Datos para el pago (cuenta, Nequi…)<textarea class="field" id="cfgInstr" placeholder="Ej. Pago por llave 300 000 0000">${esc(c.instrucciones)}</textarea></label></section>
+</section>
     <section><button class="btn primary" type="button" id="cfgSave">Guardar ajustes</button></section>
   </div>`;
   $$('#view .money').forEach(i => i.addEventListener('input', ev => { const n = parseMoney(ev.target.value); ev.target.value = n ? n.toLocaleString('es-CO') : ''; }));
+  $('#cfgSemNuevo2').addEventListener('click', () => $('#cfgSemNuevo').click());
   $('#cfgSemNuevo').addEventListener('click', () => {
     const ult = perList().pop() || SEM_ACT, nk = semSig(ult), p = S.cfg.periodos[ult] || {};
     const [y, s] = nk.split('-'); const hom = S.cfg.periodos[(+y - 1) + '-' + s];
@@ -2772,18 +2812,18 @@ async function guardarAjustes(extra, msg){
   const periodos = leerPeriodos();
   for (const [k,p] of Object.entries(periodos)) if (!p.desde || !p.hasta || p.desde > p.hasta) return toast(`Revise el semestre ${k}: el primer mes debe ser anterior al último.`);
   const nuevo = { ...Store.d.config.general, ...S.cfg, periodos, programas:leerProgramas(), cursos:leerCursos(), conceptos:leerConceptos(),
-    becaPct: Math.min(100, Math.max(0, parseMoney($('#cfgBeca').value))), becaActiva:$('#cfgBecaAct').checked, nombreCuota:$('#cfgNC').value.trim() || 'Campus virtual', textoCuota:$('#cfgTC').value.trim(), color:$('#inCol').value,
+    becaPct: Math.min(100, Math.max(0, parseMoney($('#cfgBeca').value))), becaActiva:$('#cfgBecaAct').checked, referidosActivo:$('#cfgRefAct').checked, nombreCuota:$('#cfgNC').value.trim() || 'Campus virtual', textoCuota:$('#cfgTC').value.trim(), color:$('#inCol').value,
     logo: S.imgTmp?.logo !== undefined ? S.imgTmp.logo : (S.cfg.logo || ''), firmaImg: S.imgTmp?.firmaImg !== undefined ? S.imgTmp.firmaImg : (S.cfg.firmaImg || ''), controlDesde:$('#cfgControl').value || S.cfg.controlDesde, valorSupletorio: parseMoney($('#cfgSup').value),
     escala:{ min:Number(String($('#esMin').value).replace(',','.'))||0, max:Number(String($('#esMax').value).replace(',','.'))||5, aprueba:Number(String($('#esApr').value).replace(',','.'))||3 },
     grado:{ valor:parseMoney($('#grV').value), documentos: (() => { const prev = S.cfg.grado.documentos || {}, inv = Object.fromEntries(Object.entries(prev).map(([k,v]) => [v,k])), o = {}; $('#grD').value.split('\n').map(x => x.trim()).filter(Boolean).forEach(t => o[inv[t] || genId('g')] = t); return o; })() },
     institucion:{ nombre:$('#inNom').value.trim(), nombreLargo:$('#inLar').value.trim(), tipo:$('#inTip').value.trim(), dane:$('#inDane').value.trim(), licencia:$('#inLic').value.trim(), departamento:$('#inDep').value.trim(), web:$('#inWeb').value.trim(), rector:$('#inRec').value.trim(), secretaria:$('#inSec').value.trim(), nit:$('#inNit').value.trim(), direccion:$('#inDir').value.trim(), ciudad:$('#inCiu').value.trim(), telefono:$('#inTel').value.trim(), correo:$('#inCor').value.trim() },
-    ...leerIntegraciones(), cobro:{ ...S.cfg.cobro, recordatorio:$('#coRec').checked, diasAntes:Math.max(1, parseMoney($('#coDA').value) || 3), activo:$('#coAct').checked, correo:$('#coMail').checked, telegram:$('#coTg').checked, frecuencia:Math.max(1, parseMoney($('#coFrec').value) || 1), gracia:parseMoney($('#coGra').value), plazo:parseMoney($('#coPla').value) || 5, minimo:parseMoney($('#coMin').value), remitente:$('#coRem').value.trim() },
-    firma:$('#cfgFirma').value.trim(), cargo:$('#cfgCargo').value.trim(), instrucciones:$('#cfgInstr').value.trim(), ...(extra || {}) };
+    ...leerIntegraciones(), cobro:{ ...S.cfg.cobro, recordatorio:$('#coRec').checked, diasAntes:Math.max(1, parseMoney($('#coDA').value) || 3), activo:$('#coAct').checked, correo:$('#coMail').checked, telegram:$('#coTg').checked, frecuencia:Math.max(1, parseMoney($('#coFrec').value) || 1), gracia:parseMoney($('#coGra').value), plazo:parseMoney($('#coPla').value) || 5, minimo:parseMoney($('#coMin').value), remitente:$('#coRem').value.trim(), remitenteNombre:$('#coRemN').value.trim() },
+    firma:$('#cfgFirma').value.trim(), cargo:$('#cfgCargo').value.trim(), ...(extra || {}) };
   { const ex = leerAjustesExtra(); if (ex._cortes){ nuevo.escala = { ...nuevo.escala, cortes:ex._cortes }; delete ex._cortes; } Object.assign(nuevo, ex, extra || {}); }
   if (nuevo.cobro.activo && nuevo.cobro.correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(nuevo.cobro.remitente)) return toast('Para enviar por correo escriba el correo remitente (por ejemplo cartera@suinstitucion.com).');
-  if (nuevo.pagosLinea.activo && !nuevo.pagosLinea.publica) return toast('Para activar los pagos en línea pegue la llave pública de Wompi.');
-  if (nuevo.moodle.activo && !/^https?:\/\//.test(nuevo.moodle.url)) return toast('Escriba la dirección de Moodle, empezando por https://');
-  try { if ($('#plInt')) await guardarSecretos(); await guardar({op:'set', c:'config', id:'general', data:nuevo}); S.imgTmp = {}; toast(msg || 'Ajustes guardados'); if (S.tab === 'ajustes') renderAjustes(); } catch(x){ toast(x.message); }
+  if (nuevo.pagosLinea?.activo && !nuevo.pagosLinea.boldIdentidad) return toast('Para activar el pago en línea pegue la llave de identidad de Bold.');
+  if (nuevo.moodle?.activo && !/^https?:\/\//.test(nuevo.moodle.url)) return toast('Escriba la dirección de la plataforma académica, empezando por https://');
+  try { if ($('#plBsec') || $('#moTok')) await guardarSecretos(); await guardar({op:'set', c:'config', id:'general', data:nuevo}); S.imgTmp = {}; toast(msg || 'Ajustes guardados'); if (S.tab === 'ajustes') renderAjustes(); } catch(x){ toast(x.message); }
 }
 
 /* ====================== diálogos ====================== */
@@ -2970,7 +3010,7 @@ function semestresDe(e){
   }
   return out;
 }
-function becaResumen(e){ const sems = semestresDe(e).map(x => { const mat = matriculaDe(e.programa, x.sk), beca = becaSem(e, x.sk); return { ...x, mat, beca, paga: Math.max(mat - beca, 0), pagado: pagMat[e.id + '|' + x.sk] || 0 }; }); const rec = sems.filter(x => x.recibida); return { beca: becaSem(e), mat: matriculaDe(e.programa, SEM_ACT), sems, recibidas: rec.filter(x => x.beca).length, totalRecibido: rec.reduce((a,x) => a + x.beca, 0), conBeca: tieneBeca(e) }; }
+function becaResumen(e){ const sems = semestresDe(e).map(x => { const mat = matriculaDe(e.programa, x.sk), beca = becaSem(e, x.sk); return { ...x, mat, beca, paga: Math.max(mat - beca, 0), pagado: pagMat[e.id + '|' + x.sk] || 0 }; }); const rec = sems.filter(x => x.recibida); return { beca: becaSem(e), mat: matriculaDe(e.programa, SEM_ACT), sems, recibidas: rec.filter(x => x.beca).length, totalRecibido: rec.reduce((a,x) => a + x.beca, 0), conBeca: tieneBeca(e), pct: pctBeca(e) }; }
 function openEstado(eid){
   const e = S.est[eid]; if (!e) return;
   const hastaV = perList().map(k => S.cfg.periodos[k].hasta).pop() || MES_ACT;
@@ -2987,8 +3027,8 @@ function openEstado(eid){
       ${e.nota?`<div class="hint" style="margin-bottom:6px">${esc(e.nota)}</div>`:''}
       ${e.notasExcel?`<div class="hint" style="margin-bottom:6px"><b>Notas que venían en el Excel:</b> ${esc(e.notasExcel)}</div>`:''}
       <h5>${br.conBeca ? 'Matrícula y beca semestral (beca ya asignada)' : 'Matrícula por semestre (sin beca)'}</h5>
-      <div class="scroller"><table class="mini"><thead><tr><th>Semestre</th><th>Periodo</th><th class="r">Matrícula</th><th class="r">Beca ${br.conBeca ? S.cfg.becaPct + '%' : ''}</th><th class="r">Debe pagar</th><th class="r">Pagado</th><th>Estado</th></tr></thead><tbody>
-      ${br.sems.map(x => { const deb = Math.max(x.paga - x.pagado, 0); return `<tr class="${x.futuro||x.retirado?'muted':''}"><td>Semestre ${x.n}</td><td>${x.sk}</td><td class="r money">${x.mat?money(x.mat):'—'}</td><td class="r money" style="color:var(--gold);font-weight:700">${x.beca?money(x.beca):br.conBeca?S.cfg.becaPct+'%':'—'}</td><td class="r money">${money(x.paga)}</td><td class="r money">${money(x.pagado)}</td><td>${x.retirado?'<span class="pill">No cursado</span>':x.futuro?'<span class="pill">Por cursar</span>':x.paga && deb ? `<span class="pill bad">Debe ${money(deb)}</span>` : br.conBeca ? (x.actual?'<span class="pill gold">Beca asignada · en curso</span>':'<span class="pill ok">Beca recibida</span>') : '<span class="pill ok">Pagada</span>'}</td></tr>`; }).join('')}
+      <div class="scroller"><table class="mini"><thead><tr><th>Semestre</th><th>Periodo</th><th class="r">Matrícula</th><th class="r">Beca ${br.conBeca ? br.pct + '%' : ''}</th><th class="r">Debe pagar</th><th class="r">Pagado</th><th>Estado</th></tr></thead><tbody>
+      ${br.sems.map(x => { const deb = Math.max(x.paga - x.pagado, 0); return `<tr class="${x.futuro||x.retirado?'muted':''}"><td>Semestre ${x.n}</td><td>${x.sk}</td><td class="r money">${x.mat?money(x.mat):'—'}</td><td class="r money" style="color:var(--gold);font-weight:700">${x.beca?money(x.beca):br.conBeca?br.pct+'%':'—'}</td><td class="r money">${money(x.paga)}</td><td class="r money">${money(x.pagado)}</td><td>${x.retirado?'<span class="pill">No cursado</span>':x.futuro?'<span class="pill">Por cursar</span>':x.paga && deb ? `<span class="pill bad">Debe ${money(deb)}</span>` : br.conBeca ? (x.actual?'<span class="pill gold">Beca asignada · en curso</span>':'<span class="pill ok">Beca recibida</span>') : '<span class="pill ok">Pagada</span>'}</td></tr>`; }).join('')}
       </tbody></table></div>
       ${!br.mat?`<p class="intro" style="margin-top:6px">Para mostrar valores, escriba la matrícula del programa en Ajustes → Semestres académicos.</p>`:''}
       <h5>${esc(NC())} mes a mes</h5>
@@ -3044,7 +3084,7 @@ function openEst(eid){
       <label>Semestre en que ingresó<select class="field" id="eCoh">${cohortes().map(c => `<option ${c===(e?.cohorte||SEM_ACT)?'selected':''}>${c}</option>`).join('')}</select></label>
       <label>Primer mes que se cobra<input class="field" type="month" id="eIni" value="${esc(e?.inicio || MES_ACT)}"></label>
       <label>Cuota propia (vacío = la del semestre)<input class="field money" id="eCuota" inputmode="numeric" value="${e?.cuota ? Number(e.cuota).toLocaleString('es-CO') : ''}" placeholder="${money(cuotaDe({}, MES_ACT))}"></label>
-      ${S.cfg.becaActiva !== false ? `<label>¿Recibe beca semestral?<select class="field" id="eBeca"><option value="1">Sí: beca del ${S.cfg.becaPct}% de la matrícula</option><option value="0" ${e?.beca===false?'selected':''}>No: se le cobra la matrícula de cada semestre</option></select></label>` : ''}
+      ${S.cfg.becaActiva !== false ? `<label>Beca (% de la matrícula)<input class="field" id="eBeca" inputmode="decimal" list="becaOps" value="${e ? pctBeca(e) : Number(S.cfg.becaPct)||0}" style="width:110px"><datalist id="becaOps">${[0,25,50,60,75,100].map(v => `<option value="${v}">`).join('')}</datalist><span class="who">0 = sin beca · 25 = un cuarto · 50 = media · 100 = completa</span></label>` : ''}
       <label class="full chk" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="ePau" ${e?.cobroPausado?'checked':''}> No enviarle cuentas de cobro automáticas</label>
       <div class="full"><div style="font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px">Meses que NO se cobran (${esc(vistas().find(v => v[0]===S.vista)?.[1] || '')})</div><div class="exgrid">${ms.map(m => `<label><input type="checkbox" data-ex="${m}" ${(e?.exentos||[]).includes(m)?'checked':''}> ${mesLabel(m,true)}</label>`).join('')}</div></div>
       <label class="full">Nota<textarea class="field" id="eNota">${esc(e?.nota||'')}</textarea></label>
@@ -3068,7 +3108,7 @@ function openEst(eid){
       poblacion:$$('[data-pob]').filter(i => i.checked).map(i => i.dataset.pob), acudiente:$('#xAc').value.trim(), telAcudiente:$('#xTA').value.trim(), jornada:$('#xJo').value, fechaMatricula:$('#xFM').value };
     const data = { ...siet, nombre: (!e && ap && no) ? (ap + ' ' + no) : nombre, documento:$('#eDoc').value.trim(), telefono:$('#eTel').value.trim(), correo:cor, programa:prog, cohorte:coh, inicio:$('#eIni').value || semMeses(coh)[0],
       cuota: parseMoney($('#eCuota').value) || null, exentos, exentosMotivo, cobroPausado:$('#ePau').checked, nota:$('#eNota').value.trim() };
-    if ($('#eBeca')) data.beca = $('#eBeca').value !== '0';
+    if ($('#eBeca')){ const n = Math.max(0, Math.min(100, parseFloat(String($('#eBeca').value).replace(',','.')) || 0)); data.becaPct = n; data.beca = n > 0; }
     if (!esRet(e)) data.fin = finDe(coh, prog); else data.retiro = { ...e.retiro, finAnterior: finDe(coh, prog) };
     const btn = $('#eSave'); btn.disabled = true;
     try {
@@ -3130,8 +3170,8 @@ const firmaTxt = () => [S.cfg.firma || 'Dirección administrativa', S.cfg.cargo 
 const instTxt = () => { const i = S.cfg.institucion; return [i.nombreLargo || '', i.tipo || 'Institución de Educación para el Trabajo y el Desarrollo Humano', i.dane ? 'DANE ' + i.dane : '', i.nit ? 'NIT ' + i.nit : '', i.direccion, i.telefono ? 'Tel. ' + i.telefono : ''].filter(Boolean).join(' · '); };
 function becaTexto(e){
   if (S.cfg.becaActiva === false) return '';
-  if (e.beca === false) return `Este estudiante no tiene beca: la matrícula de cada semestre se cobra completa, además de la cuota mensual de ${NC().toLowerCase()}.`;
-  const b = becaSem(e), pct = Number(S.cfg.becaPct);
+  if (!tieneBeca(e)) return `Este estudiante no tiene beca: la matrícula de cada semestre se cobra completa, además de la cuota mensual de ${NC().toLowerCase()}.`;
+  const b = becaSem(e), pct = pctBeca(e);
   return pct >= 100 ? `Beca semestral ya asignada: el estudiante tiene beca del 100% de la matrícula en cada uno de los ${semestresProg(e)} semestres del programa${b ? ' (' + money(b) + ' por semestre)' : ''}, por lo cual no paga matrícula. La cuota mensual que paga corresponde únicamente al servicio de ${NC().toLowerCase()}.`
     : `Beca semestral ya asignada: el estudiante tiene beca del ${pct}% de la matrícula en cada uno de los ${semestresProg(e)} semestres${b ? ' (' + money(b) + ' por semestre)' : ''}. Paga el saldo de la matrícula y la cuota mensual de ${NC().toLowerCase()}.`;
 }
@@ -3152,7 +3192,7 @@ function becaTablaHtml(br){
   const filas = br.sems.filter(x => !x.retirado && !x.futuro);
   if (!filas.length) return '';
   return `<table><thead><tr><th>Semestre</th><th>Periodo</th><th class="r">Matrícula</th><th class="r">Beca</th><th class="r">Debe pagar</th><th class="r">Pagado</th></tr></thead><tbody>
-    ${filas.map(x => `<tr><td>Semestre ${x.n}${x.actual?' (en curso)':''}</td><td>${x.sk}</td><td class="r">${x.mat?money(x.mat):'—'}</td><td class="r">${x.beca?money(x.beca):br.conBeca?S.cfg.becaPct+'%':'Sin beca'}</td><td class="r">${money(x.paga)}</td><td class="r">${money(x.pagado)}</td></tr>`).join('')}</tbody>
+    ${filas.map(x => `<tr><td>Semestre ${x.n}${x.actual?' (en curso)':''}</td><td>${x.sk}</td><td class="r">${x.mat?money(x.mat):'—'}</td><td class="r">${x.beca?money(x.beca):br.conBeca?br.pct+'%':'Sin beca'}</td><td class="r">${money(x.paga)}</td><td class="r">${money(x.pagado)}</td></tr>`).join('')}</tbody>
     ${br.totalRecibido?`<tfoot><tr class="tot"><td colspan="3">Total becas recibidas</td><td class="r">${money(br.totalRecibido)}</td><td></td><td></td></tr></tfoot>`:''}</table>`;
 }
 function cartaHtml(d){
@@ -3194,7 +3234,7 @@ function cartaTexto(d){
 function openCarta(eid){
   const e = S.est[eid]; if (!e) return; const d = cartaData(eid);
   openDlg(`<div class="dh"><div><h2>Estado de cuenta</h2><p>${esc(e.nombre)} · corte ${fechaLabel(HOY)}</p></div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
-    <div class="db">${!S.cfg.instrucciones ? `<div class="hint" style="margin-bottom:12px">En <b>Ajustes</b> puede escribir quién firma, el NIT y los datos para el pago (cuenta, Nequi).</div>` : ''}<div id="cPrev">${cartaHtml(d)}</div></div>
+    <div class="db">${!S.cfg.instrucciones ? `<div class="hint" style="margin-bottom:12px">En <b>Parametrización</b> puede escribir quién firma, el NIT y cómo le pagan (llave, Bold, efectivo).</div>` : ''}<div id="cPrev">${cartaHtml(d)}</div></div>
     <div class="df">${telWa(e.telefono) ? `<a class="btn wa" target="_blank" rel="noopener" href="${esc(waHref(e.telefono, cartaTexto(d)))}">Enviar por WhatsApp</a>` : ''}<button class="btn sp" type="button" id="cWa">Copiar mensaje para WhatsApp</button>${d.total>0?`<button class="btn" type="button" data-cobro="${esc(eid)}">Cuenta de cobro</button>`:''}<button class="btn primary" type="button" id="cPdf">Descargar PDF</button></div>`, true);
   $('#cWa').addEventListener('click', () => copiar(cartaTexto(d), '#cPrev'));
   $('#cPdf').addEventListener('click', () => cartaPdf(d));
@@ -3310,7 +3350,7 @@ function pdfBecaTabla(P, br){
   const f = br.sems.filter(x => !x.retirado && !x.futuro); if (!f.length) return;
   const M = P.M;
   P.tabla([{t:'Semestre',x:M},{t:'Periodo',x:M+110},{t:'Matrícula',x:M+240,r:1},{t:'Beca',x:M+320,r:1},{t:'Debe pagar',x:M+400,r:1},{t:'Pagado',x:P.W-M,r:1}],
-    f.map(x => ({ v:['Semestre ' + x.n + (x.actual ? ' (en curso)' : ''), x.sk, x.mat ? money(x.mat) : '—', x.beca ? money(x.beca) : br.conBeca ? S.cfg.becaPct + '%' : 'Sin beca', money(x.paga), money(x.pagado)] })),
+    f.map(x => ({ v:['Semestre ' + x.n + (x.actual ? ' (en curso)' : ''), x.sk, x.mat ? money(x.mat) : '—', x.beca ? money(x.beca) : br.conBeca ? br.pct + '%' : 'Sin beca', money(x.paga), money(x.pagado)] })),
     br.totalRecibido ? ['Total becas recibidas', null, null, money(br.totalRecibido), null, null] : null);
 }
 function cartaPdf(d){
@@ -3512,6 +3552,7 @@ async function instituciones(){
       <label>Plan<select class="field" id="iPl"><option value="esencial">Esencial</option><option value="profesional" selected>Profesional</option><option value="integral">Integral con IA</option></select></label>
       <label>Máx. digitadores<input class="field" id="iMD" inputmode="numeric" value="2"></label>
       <label>Máx. usuarios de contabilidad<input class="field" id="iMC" inputmode="numeric" value="2"></label>
+      <label class="chk full" id="iPAw" style="flex-direction:row;color:var(--ink)"><input type="checkbox" id="iPA"> Tiene campus virtual (Moodle) instalado: se cobra aparte cada mes</label>
       <label id="iAw" hidden>Estado<select class="field" id="iA"><option value="1">Activa</option><option value="0">Suspendida (sus usuarios no pueden entrar)</option></select></label>
       <label class="full" id="iNotw" hidden>Nota interna (plan, fecha de pago…)<input class="field" id="iNot"></label>
       <div class="full" id="iDir" style="display:grid;grid-template-columns:1fr 1fr;gap:12px 14px"><b style="grid-column:1/-1;font-size:13px">Director(a) de la institución</b>
@@ -3523,7 +3564,7 @@ async function instituciones(){
   let edit = null;
   const modo = i => { edit = i; $('#iTit').textContent = i ? 'Editar ' + i.nombre : 'Crear institución nueva'; $('#iId').readOnly = !!i; ['#iDir','#iLw','#iNw','#iCw'].forEach(k => $(k).hidden = !!i); ['#iAw','#iNotw'].forEach(k => $(k).hidden = !i); $('#iOk').textContent = i ? 'Guardar cambios' : 'Crear institución';
     $('#iIni').closest('label').hidden = !!i;
-    if (i){ $('#iN').value = i.nombre; $('#iId').value = i.id; $('#iMD').value = i.maxDigitadores; $('#iMC').value = i.maxContables; $('#iA').value = String(+i.activo); $('#iNot').value = i.nota || ''; $('#iCo').value = i.correo || ''; $('#iTe').value = i.telefono || ''; $('#iPl').value = i.plan || 'profesional'; $('#iV').value = i.vence || ''; $('#iVw').hidden = false; $('#iVw').firstChild.textContent = 'Pagado / prueba hasta (vacío = sin cobro)'; }
+    if (i){ $('#iN').value = i.nombre; $('#iId').value = i.id; $('#iMD').value = i.maxDigitadores; $('#iMC').value = i.maxContables; $('#iA').value = String(+i.activo); $('#iNot').value = i.nota || ''; $('#iCo').value = i.correo || ''; $('#iTe').value = i.telefono || ''; $('#iPl').value = i.plan || 'profesional'; $('#iV').value = i.vence || ''; $('#iPA').checked = !!+i.plataformaAcad; $('#iVw').hidden = false; $('#iVw').firstChild.textContent = 'Pagado / prueba hasta (vacío = sin cobro)'; }
     else { $('#fIns').reset(); $('#iVw').firstChild.textContent = 'Pagado hasta'; $('#iVw').hidden = true; } };
   $('#iIni').onchange = () => { $('#iVw').hidden = $('#iIni').value !== 'fecha'; };
   $('#iVw').hidden = true; $('#iPla').onclick = plataformaDlg;
@@ -3534,7 +3575,7 @@ async function instituciones(){
   dlg.querySelectorAll('[data-ient]').forEach(b => b.onclick = async () => { try { await api('entrar_inst', { id:b.dataset.ient }); location.reload(); } catch(e){ toast(e.message); } });
   $('#fIns').onsubmit = async ev => { ev.preventDefault(); $('#iErr').hidden = true;
     const body = { id:$('#iId').value.trim(), nombre:$('#iN').value.trim(), nombreLargo:$('#iL').value.trim(), nit:$('#iNit').value.trim(), ciudad:$('#iC').value.trim(), maxDigitadores:parseMoney($('#iMD').value), maxContables:parseMoney($('#iMC').value),
-      activo: edit ? $('#iA').value === '1' : true, nota:$('#iNot').value.trim(), correo:$('#iCo').value.trim(), telefono:$('#iTe').value.trim(), inicio:$('#iIni').value, vence:$('#iV').value, plan:$('#iPl').value, dirNombre:$('#dN').value.trim(), dirUsuario:$('#dU').value.trim(), dirClave:$('#dC').value };
+      activo: edit ? $('#iA').value === '1' : true, nota:$('#iNot').value.trim(), correo:$('#iCo').value.trim(), telefono:$('#iTe').value.trim(), inicio:$('#iIni').value, vence:$('#iV').value, plan:$('#iPl').value, plataformaAcad:$('#iPA').checked, dirNombre:$('#dN').value.trim(), dirUsuario:$('#dU').value.trim(), dirClave:$('#dC').value };
     try { await api('institucion_guardar', body); toast(edit ? 'Institución actualizada' : 'Institución creada. Entréguele al director su usuario y contraseña.'); instituciones(); }
     catch(e){ errEn('#iErr', e.message); } };
 }
@@ -3661,5 +3702,5 @@ try { const t = localStorage.getItem('poli-tab'); if (t) S.tab = t; const a = lo
 })();
 })();
 </script>
-</body>
-</html>
+
+</body></html>
