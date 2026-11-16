@@ -2763,7 +2763,7 @@ function renderAjustes(){
       <label>Valor por supletorio<input class="field money" id="cfgSup" inputmode="numeric" value="${Number(c.valorSupletorio).toLocaleString('es-CO')}"></label>
       <p>Los meses anteriores a "Cobrar cartera desde" se muestran como historial y no generan deuda.</p></section>
     <section><h4>Firma y datos para el pago</h4>
-      <label class="grow">Nombre de quien firma<input class="field" id="cfgFirma" value="${esc(c.firma)}" placeholder="Ej. Ricardo Londoño González"></label>
+      <label class="grow">Nombre de quien firma<input class="field" id="cfgFirma" value="${esc(c.firma)}" placeholder="Ej. María Fernanda Ruiz"></label>
       <label class="grow">Cargo<input class="field" id="cfgCargo" value="${esc(c.cargo)}" placeholder="Ej. Rector"></label>
 </section>
     <section><button class="btn primary" type="button" id="cfgSave">Guardar ajustes</button></section>
@@ -3456,7 +3456,7 @@ function mostrarInstalar(){
   $('#accSub').textContent = 'Primera vez: cree la cuenta del administrador del sistema (usted). Podrá crear instituciones y entrar a cualquiera. Al entrar se cargarán los datos del Excel. Guarde bien la contraseña.';
   const f = $('#accForm');
   f.innerHTML = `<label>Su nombre completo<input class="field" id="iN" required></label>
-    <label>Usuario (sin espacios)<input class="field" id="iU" autocomplete="username" required placeholder="ej. rlondono"></label>
+    <label>Usuario (sin espacios)<input class="field" id="iU" autocomplete="username" required placeholder="ej. mruiz"></label>
     <label>Contraseña (mínimo 8 caracteres)<input class="field" id="iC" type="password" autocomplete="new-password" required></label>
     <label>Repita la contraseña<input class="field" id="iC2" type="password" autocomplete="new-password" required></label>
     <div class="msg" id="iMsg"></div><button class="btn primary" type="submit" id="iBtn">Crear administrador y entrar</button>`;
